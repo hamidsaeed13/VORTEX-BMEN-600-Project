@@ -3,7 +3,7 @@
 ## Team
 
 - Afshar, Setayesh
-- Kraft, Jake
+- Kraft, Jacob
 - Osifo, Emmanuella
 - Saeed, Hamid
 - Yeboah, Ahenkan
