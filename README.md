@@ -92,8 +92,7 @@ patients who are very likely to be normal.
 .
 ├── README.md
 ├── data/            # raw and processed NHANES extracts
-├── notebooks/        # EDA and modeling notebooks
-└── src/               # reusable data processing / modeling code
+└── code/            # notebooks and reusable data processing / modeling code
 ```
 
 ## Status
