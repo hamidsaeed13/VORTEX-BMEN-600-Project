@@ -1,0 +1,127 @@
+This study will build and evaluate prediction models for undiagnosed dysglycemia in U.S. adults using a single cross-sectional survey cycle. The primary outcome is diabetes-range HbA1c (≥6.5%) among participants without a prior diabetes diagnosis, described as probable undiagnosed diabetes because a single survey measurement does not establish a clinical diagnosis. The primary comparison is between Model 0 (age and sex) and Model 1 (age, sex, and CBC indices). The primary performance metric is the difference in survey-weighted area under the receiver operating characteristic curve (ΔAUROC = AUROC Model 1 − AUROC Model 0), with a confidence interval, along with calibration and decision-analytic measures.
+The clinical objective is not to diagnose diabetes using CBC data. Instead, we aim to determine whether CBC information from routine blood testing can help rank individuals for subsequent glycemic testing while maintaining a prespecified high sensitivity for the primary outcome. Analyses will account for the complex NHANES survey design, and reporting will adhere to TRIPOD+AI guidelines.
+2. Data source and study population
+NHANES is a nationally representative, stratified, multistage probability survey of the U.S. civilian noninstitutionalized population [7,8]. The present study will use the August 2021–August 2023 release (file suffix _L) as a single cross-sectional cycle, without pooling with earlier cycles. Public-use files will be linked using the participant identifier SEQN. Relevant files include those for demographics and survey design (DEMO_L; SEQN, RIAGENDR, RIDAGEYR, RIDEXPRG, RIDRETH3, SDMVSTRA, SDMVPSU) and CBC with 5-part differential (CBC_L; WTPH2YR; LBXWBCSI, LBXRBCSI, LBXHGB, LBXHCT, LBXMCVSI, LBXMCHSI, LBXMC, LBXRDW, LBXPLTSI, LBXMPSI, LBXNEPCT, LBXLYPCT, LBXMOPCT, LBXEOPCT, LBXBAPCT).
+The source draft reports 11,933 participants in DEMO_L, 8,727 in the CBC file (7,593 with valid RDW), and 7,199 participants aged 12 years or older in the HbA1c file (6,715 with a result) [8–10]. These counts are not the final analytic sample size. We will verify counts against the downloaded files and report the final sample size at each eligibility step in a participant-flow diagram.
+Inclusion criteria are as follows: age 18 years or older; not pregnant, based on RIDEXPRG where pregnancy status is available and applicable; positive phlebotomy weight (WTPH2YR > 0); and available HbA1c and CBC data required for the relevant model.
+Exclusion and diabetes-history classification:
+Exclude participants reporting a prior physician diagnosis of diabetes (DIQ010 = 1).
+Exclude refused or “don’t know” responses in which diabetes history cannot be classified.
+Exclude current insulin or oral glucose-lowering medication use (DIQ050 = 1 or DIQ070 = 1) where available, because treatment may lower HbA1c. These items are asked only under specified questionnaire conditions [11]. Skip patterns will be respected rather than treating structural missingness as ordinary missing data.
+Participants reporting borderline diabetes (DIQ010 = 3) or prediabetes (DIQ160 = 1) will remain eligible if they have no prior diabetes diagnosis and meet the other criteria. They will be flagged and excluded in a sensitivity analysis.
+The cohort and exclusions will be defined prior to model fitting. Questionnaire skip patterns and response handling will be documented in both code and the participant-flow diagram.
+3. Outcomes and groups
+Primary outcome — probable undiagnosed diabetes: HbA1c ≥6.5% (LBXGH ≥ 6.5) among eligible participants without a prior diabetes diagnosis and meeting prespecified medication exclusions [12]. A single HbA1c result does not confirm a clinical diagnosis. Without unequivocal hyperglycemia with classic symptoms, clinical guidance calls for repeat or concordant testing [12]. By the study definition, results will be described as probable undiagnosed diabetes. Secondary outcome — elevated HbA1c/dysglycemia: HbA1c ≥5.7%, covering the prediabetes and diabetes ranges under the study definition [12]. This is a separate secondary endpoint and will not replace the primary outcome.
+Sensitivity outcomes, using the fasting subsample and the appropriate fasting-subsample weight:
+Fasting plasma glucose ≥126 mg/dL.
+A concordant high-glycemia definition requiring both HbA1c ≥6.5% and fasting plasma glucose ≥126 mg/dL.
+The concordant definition is a sensitivity outcome and is not equivalent to clinical confirmation through repeat testing on separate occasions. NHANES changed HbA1c instruments from the Tosoh G8 to the Bio-Rad D-100 during this cycle; the source draft reports that a bridging study found no substantial difference and NCHS applied no correction [10]. This will be acknowledged as a measure of consideration.
+4. Data cleaning and preprocessing
+Merge and uniqueness. Merge relevant files on SEQN, check participant-level structure, and confirm the merged data contain no unintended duplicate participant rows. NHANES reports CBC measurements are run in duplicate and the released result is averaged [9]. Use the released participant-level values.
+Codebook and plausibility checks will verify units, allowable ranges, special missing-value codes, and distributions against NCHS documentation. Physiologically plausible extreme values will be retained rather than automatically winsorized. Highly right-skewed variables will be transformed only when justified by their distributions and modeling approach. Differential percentages will be verified to sum to approximately 100%, allowing for rounding and missingness. For CBC/HbA1c analyses, the appropriate examination/phlebotomy weight (WTPH2YR) together with SDMVSTRA and SDMVPSU will be used, following cycle-specific NCHS guidance [8–10]. For fasting-glucose analyses, the fasting-subsample weight specified by NCHS will be applied. Weight choice and domain restrictions will be documented for every analysis.
+Missing data. Summarize missingness by variable and relevant characteristics, including age, sex, and race/ethnicity. Distinguish item nonresponse from questionnaire skip patterns and measurements unavailable by design. The primary analysis will use a clearly defined complete-case cohort for the predictors and outcome required by each model. A missing-data sensitivity plan will be finalized after assessing the amount and pattern of missingness. Multiple imputation will be considered where appropriate, with imputation performed within training folds to prevent leakage.
+Age top-coding. NHANES top-codes age at 80 years [8]; participants recorded as 80 will be analyzed as age 80, and this limitation will be acknowledged.
+Leakage-safe preprocessing will be implemented by estimating imputation, scaling, transformations, and other data-dependent preprocessing steps on training data only within each cross-validation fold, then applying these steps to the corresponding validation data. The held-out test set will not be used for feature selection, tuning, threshold selection, or other modeling decisions.
+5. Predictors and feature definitions
+Model 0: demographic baseline
+Age (RIDAGEYR)
+Sex (RIAGENDR)
+Model 1: demographics plus CBC
+Model 1 will include age, sex, and the prespecified CBC measurements, subject to data availability and quality checks: WBC (LBXWBCSI), RBC (LBXRBCSI), hemoglobin (LBXHGB), hematocrit (LBXHCT), MCV (LBXMCVSI), MCH (LBXMCHSI), MCHC (LBXMC), RDW (LBXRDW), platelet count (LBXPLTSI), MPV (LBXMPSI), and differential percentages (LBXNEPCT, LBXLYPCT, LBXMOPCT, LBXEOPCT, LBXBAPCT).
+Prespecified candidate derived indices may include:
+NLR: neutrophil measure divided by lymphocyte measure.
+PLR: platelet count divided by absolute lymphocyte count.
+MLR: absolute monocyte count divided by absolute lymphocyte count.
+SII: platelet count × absolute neutrophil count ÷ absolute lymphocyte count.
+The exact formulas and units will be specified in code and checked against the variables available in the downloaded files. Where absolute differential counts are derived from WBC and differential percentages, calculations will use consistent source values and appropriate percentage-to-proportion conversion. A percentage must not be mixed with an absolute count without conversion. This is particularly important for PLR, MLR, and SII.
+RDW [5] and NLR [6] will be examined as named candidate features due to their discussion in prior literature. Individual feature-contribution analyses will be exploratory unless separately prespecified. No outcome-driven feature selection will be performed on the full dataset. Correlations among CBC variables, especially red-cell indices, will be described. Regularization will be used to reduce overfitting; variance inflation factors may be reported as descriptive diagnostics but will not serve as an automatic variable-removal rule.
+Comparator and secondary models
+Model 2: age + sex + BMI, to place CBC performance in context.
+Exploratory single-marker models: RDW alone and NLR alone.
+Algorithm sensitivity analysis: a prespecified gradient-boosted-tree model, using the same development/test partitioning.
+These analyses are secondary or exploratory and do not replace the primary comparison of Model 1 with Model 0.
+6. Modeling and evaluation design
+The primary algorithm will be elastic-net logistic regression for both Model 0 and Model 1, using the same modeling framework and evaluation design to isolate the added information from CBC features. A gradient-boosted-tree model (such as XGBoost or scikit-learn histogram gradient boosting) will serve as a secondary algorithm sensitivity analysis, rather than as a second primary model.
+Participants will be split once into a 70% development set and a 30% held-out test set, using a fixed seed and stratification by outcome and sex where feasible. Hyperparameters will be tuned only in the development set using repeated stratified 5-fold cross-validation and log-loss. The operating threshold will be selected from out-of-fold development predictions according to the prespecified clinical objective in Section 7. Final primary models will be refitted on all development data and evaluated once on the held-out test set. Repeating the procedure across 100 random partitions will assess split-to-split stability. These partitions are not independent external validations and will be reported separately from the primary test-set result.
+Class imbalance. The primary analysis will not use synthetic oversampling such as SMOTE, which can distort observed prevalence and calibration [29]. Models will be developed using the natural class distribution.
+Weights in fitting and evaluation. The primary fit will be unweighted elastic-net logistic regression with survey-weighted performance evaluation. Including age and sex does not automatically account for all aspects of survey selection, nonresponse, or clustering. Therefore, we will examine survey-weighted model fitting as a sensitivity analysis where technically feasible. Use the appropriate examination/phlebotomy weight for CBC/HbA1c evaluation and the fasting-subsample weight for fasting-glucose analyses. Report the weight and design choices transparently.
+Sample size and complexity. Report the number of eligible participants and primary-outcome events before fitting. Assess event counts relative to candidate predictor parameters and use Riley et al. criteria [30] to determine whether the feature set and penalization are supportable. If event counts are inadequate, reduce model intricacy using a documented rule without consulting the held-out test results.
+7. Chief result and clinical decision analysis
+Primary performance estimand
+ΔAUROC = AUROC(Model 1: age + sex + CBC) − AUROC(Model 0: age + sex). This will be estimated on the held-out test set using appropriate survey weights, with a 95% confidence interval. A positive difference demonstrates better discrimination after adding CBC indices. Statistical evidence of a nonzero difference alone will not establish clinical usefulness.
+Because AUROC summarizes ranking across thresholds and may obscure performance for a relatively uncommon outcome, also report AUPRC, calibration, and threshold-specific performance. Report the weighted primary-outcome prevalence alongside prevalence-dependent metrics.
+Clinical operating point
+The intended use is to direct subsequent glycemic testing while avoiding an unacceptable number of missed cases. The operating threshold will be selected in development data to target a prespecified high sensitivity for the primary outcome. The exact target must be agreed on and justified before test-set evaluation; it must not be selected after examining test performance. Sensitivity at 80% and 90% may be reported as additional descriptive operating points but will not substitute for the primary high-sensitivity objective if the team judges them insufficient.
+At the primary operating point, report sensitivity, specificity, PPV, NPV, the proportion referred for follow-up testing, tests required per detected case (1 / PPV when PPV is nonzero), and missed primary-outcome cases per 1,000 eligible adults. Apply the same evaluation rules to Model 0 and Model 1. This is a referral threshold for further testing, not a diagnostic threshold.
+Calibration and decision-curve analysis
+Assess calibration using a calibration plot, intercept, slope, and Brier score [28]. Any recalibration will be developed using development data only and evaluated without using the test set for tuning.
+Potential clinical utility will be assessed with decision-curve analysis [26,27], using NB = TP/N − (FP/N) × pt/(1 − pt), where pt is the decision threshold probability. The analysis will specify whether TP, FP, and N are represented by survey-weighted totals or proportions so estimates correspond to the target population. Compare Model 0 and Model 1 with “test everyone” and “test no one” across a prespecified, clinically plausible threshold range. The range will be justified rather than assumed universally appropriate.
+Prespecified interpretation
+Prior to opening the held-out test set, the minimum practically meaningful AUROC improvement and the clinical operating target will be specified. The proposed ΔAUROC margin of 0.02 is a placeholder until the team agrees on and justifies it; it should not be described as an established clinical standard without supporting evidence.
+Evidence that CBC adds useful information will be evaluated based on the combined pattern of: (1) ΔAUROC and its interval relative to the prespecified practical margin; (2) performance at the high-sensitivity operating point, including missed cases and testing burden; (3) calibration adequate for the intended decision; and (4) decision-curve results across the prespecified range. The model is not required to outperform all strategies at every threshold regardless of context. If the added information does not yield a meaningful and robust improvement, it will be concluded that CBC adds limited value beyond age and sex for this task and dataset.
+8. Comparisons that place the result in context
+Risk-factor comparator: age + sex + BMI to assess whether CBC provides information in a model including BMI.
+Published screening rules: apply the age ≥35 years rule associated with ADA guidance [12] and the USPSTF age 35–70 years plus BMI ≥25 rule [15] using the exact definitions in the cited guidance. Report sensitivity, specificity, PPV, and the proportion referred for testing.
+Default strategies: test everyone and test no one in decision-curve analysis.
+Single-marker exploratory models: RDW alone and NLR alone.
+Algorithm sensitivity analysis: compare elastic-net logistic regression with the prespecified boosted-tree model using the same partitions and evaluation approach.
+The primary conclusion will be based on Model 1 versus Model 0. Other comparisons will be labeled secondary or exploratory.
+9. Bias, validity, and limitations
+Data leakage: feature preprocessing and tuning occur within development folds. The threshold is selected from development data. The held-out test set is evaluated once for the primary analysis [31].
+Survey clustering: each participant appears in only one partition in the primary split. NHANES participants are clustered within PSUs; public-use household identifiers may not be available. PSU-grouped validation will be examined as a sensitivity analysis where feasible, keeping the grouping strategy consistent with available strata/PSU identifiers. It is not equivalent to external validation.
+Complex survey design: the cohort is a domain of the full NHANES sample. For design-based descriptive and inferential analyses, construct the survey design object according to NCHS guidance and examine the eligible cohort as a domain where required for valid variance estimation [18]. Verify design degrees of freedom from the actual design object and documentation rather than assuming them.
+HbA1c and red-cell biology: HbA1c can be affected by red-cell lifespan, iron deficiency, and other hematologic factors independently of glycemia [13,14]. Since CBC predictors measure some of these properties, a model may partly predict HbA1c variation unrelated to glucose. Address this with fasting-glucose and concordant-outcome analyses and models omitting selected red-cell features such as hemoglobin, MCV, and RDW. Consider a non-anemic subgroup analysis using the stated sex-specific thresholds (anemia defined as hemoglobin <13 g/dL in men and <12 g/dL in women [16]). The non-anemic subset must use hemoglobin at or above the applicable threshold.
+Prevalence-dependent metrics: report weighted prevalence alongside AUPRC, PPV, NPV, and net benefit.
+Researcher degrees of freedom: prespecify a primary outcome, a single primary model comparison, and a primary performance estimand. Label other outcomes, feature analyses, algorithms, and subgroup analyses as secondary or exploratory. Report relevant models tried.
+Subgroup performance: describe AUROC and calibration by sex, age band, and race/ethnicity (RIDRETH3), emphasizing uncertainty and subgroup event counts. Race/ethnicity will not be a predictor in the primary model. Claims about sampling and representativeness will follow cycle-specific documentation [8].
+Cross-sectional scope: this study considers identification of concurrent diabetes-range HbA1c, not future diabetes incidence. Results from one cycle cannot establish that the model improves clinical outcomes. External validation and prospective evaluation are needed before clinical implementation.
+Missingness and selection: show exclusions and missing measurements in the flow diagram. Interpret complete-case findings in light of observed missingness and limitations of any imputation sensitivity analysis.
+10. Variability and uncertainty
+Descriptive statistics: survey-weighted means and proportions with Taylor-linearized standard errors and 95% confidence intervals using the appropriate design-based degrees of freedom.
+Model-performance uncertainty: use a survey-compatible variance-estimation approach. The planned Rao–Wu rescaled bootstrap [19] will resample PSUs within strata (B = 2,000) where supported by the cycle-specific design and available strata/PSU structure. Check implementation and sparse-stratum handling. Report 95% confidence intervals for AUROC, AUPRC, sensitivity, specificity, PPV, and net benefit.
+Paired model comparison: use the same valid resampling replicates for Model 0 and Model 1 so the ΔAUROC interval accounts for the paired comparison.
+Split-to-split stability: report the distribution of ΔAUROC and clinical metrics across 100 repeated partitions separately from the primary held-out test-set estimate. These partitions describe sensitivity to the split and do not replace the primary inferential analysis.
+Figures and tables: provide a participant-flow diagram, weighted descriptive table, forest plot of ΔAUROC across primary and sensitivity analyses, calibration plots, and decision curves including uncertainty bands where supported. Include event counts in performance tables and emphasize effect sizes and confidence intervals rather than relying on p-values alone.
+Complete the bootstrap and variance-estimation procedures only after confirming their validity for the NHANES design and each selected metric. If a metric cannot be estimated reliably with the planned method, state the limitation explicitly.
+11. Software and computational tools
+The planned environment is Python 3.11 with pandas [23], NumPy [24], scikit-learn [22], and XGBoost [21] for data treatment and modeling; statsmodels and matplotlib for diagnostics and figures; and R with the survey package [18] for design-based descriptives and cross-checking weighted estimates. Jupyter will support exploration and reporting. A pinned environment.yml, fixed random seeds, Git version control, and recorded software versions will support reproducibility.
+12. Planned code structure and outputs
+Step
+Script or notebook
+Purpose
+Output
+1
+01_download_merge.py
+Download _L XPT files from CDC; merge on SEQN; check uniqueness
+merged.parquet; data-quality log
+2
+02_cohort_outcomes.py
+Apply eligibility and exclusion rules; define outcomes; construct and validate CBC indices
+cohort.parquet; participant-flow counts
+3
+03_survey_descriptives.R or equivalent
+Weighted descriptives, missingness summaries, correlations
+Table 1; QC report
+4
+04_make_splits.py
+Create primary 70/30 split and repeated partitions; define PSU-grouped sensitivity folds where feasible
+Saved split indices and fold assignments
+5
+05_train_models.py
+Fit Models 0 and 1; tune elastic-net models; fit secondary boosted-tree model; select thresholds using development predictions
+Fitted models; development predictions; tuning records
+6
+06_evaluate.py
+Calculate weighted metrics, uncertainty intervals, calibration, and decision curves
+Results tables and figures
+7
+07_sensitivity.py
+Fasting-glucose and concordant outcomes; prediabetes/borderline-diabetes exclusions; non-anemic subset; feature-omission models; PSU-grouped validation; subgroup performance
+Sensitivity and exploratory tables
+8
+08_figures_report.ipynb
+Assemble figures, tables, limitations, and TRIPOD+AI checklist
+Report assets and reproducible results summary
+
+Shared functions will live in a small src/ package, such as features.py, survey_bootstrap.py, metrics.py, and dca.py, with unit tests for derived-index formulas, weighted metrics, threshold selection, and bootstrap procedures. A configuration file will hold seeds, prespecified thresholds, file paths, and model settings so the workflow can be rerun from raw data.
+
