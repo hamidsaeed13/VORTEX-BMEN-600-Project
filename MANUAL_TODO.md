@@ -6,32 +6,51 @@ or pushed anywhere — it's all local, on branch `Hamid-midTermProposal`.
 ## 0. Draft is ready — please eyeball it
 
 Updated draft at **[drafts/Midterm_Research_Plan_Draft.docx](drafts/Midterm_Research_Plan_Draft.docx)**,
-plus a new **[code/02_baseline_model_and_figures.ipynb](code/02_baseline_model_and_figures.ipynb)**
-with a real, executed baseline model (not a mockup) feeding Section 5.
+plus **[code/02_baseline_model_and_figures.ipynb](code/02_baseline_model_and_figures.ipynb)** with
+a real, executed baseline model (not a mockup) feeding Section 5.
 
-What changed in this pass:
-- **Fact-checked every citation against its actual PDF**, not just an abstract snippet — several
-  numbers/claims were corrected or sharpened as a result (e.g., the Lorenzo and Gkrania-Klotsas
-  papers were previously lumped together as uniformly confirmatory; the Lorenzo cohort's own
-  finding was actually null after adjustment, which the draft now says explicitly). Full list of
-  what was checked and what changed: [literature_review/README.md](literature_review/README.md).
-- **Added a real baseline model** (logistic regression + random forest on the actual NHANES data):
-  AUROC improves from 0.743 (demographics only) to 0.811 (CBC + demographics, random forest), with
-  a full sensitivity/specificity/NPV table across thresholds. This is now in Section 5, and is a
-  genuine, reproducible run — all numbers in the Word doc match the notebook's own printed output.
-- **Removed all team-member names** from the document (title page, Section 6, AI-Assisted Work,
-  Author Contributions) per your instruction — those sections now speak by role (Project Manager,
-  Coordinator, Editor, Reviewer, Presentation Lead) instead of by name. Published-author names in
-  the References list were kept (required for valid citations).
-- **`Sugar Predictor/`** (the old project you added) is now in `.gitignore` — it won't be tracked
-  or pushed. I used it only to confirm standard technique choices (SMOTE/class-weighting for
-  imbalance, stratified splits, correlation heatmaps) — none of its own data or any mention of it
-  appears anywhere in the report.
+This pass added a second, independent, adversarial fact-check on top of the first (both documented
+in [literature_review/README.md](literature_review/README.md)), plus a code-review pass on both
+notebooks specifically for edge cases. What actually got fixed:
 
-- [ ] **Open the .docx in Word and check the actual page count.** Body content is ~3,140 words
-  plus one table and one figure; I can't render it here (no LibreOffice/pandoc on this machine) to
-  confirm it's under the 6-page cap. If it's over, tell me and I'll cut further — Section 2 is the
-  easiest place to trim without losing the new verified numbers.
+**Citations (second verification pass found 8 concrete errors the first pass missed):**
+- Wrong volume/year for the Mansoori et al. reference (cited as vol. 12/2022; the PDF's own footer
+  says vol. 13, article 663, **2023**) — the most serious one.
+- Horton et al.'s publication month was wrong (Apr. → May 2019).
+- Dropped the IDF Atlas's own "aged 20–79" qualifier on the 589-million figure — restored.
+- A citation ([4], the CDC webpage) was being used but never logged as checked anywhere — logged.
+- "A Chinese tertiary hospital" was an invented descriptor for the Guo et al. study — the paper
+  never says "tertiary"; corrected to name the actual hospital.
+- The word "directly" was added to the Veeranna citation beyond what its title supports — removed.
+- The Lorenzo et al. (IRAS) paragraph omitted that paper's actual headline finding (lymphocyte
+  count OR 1.96) while only reporting its null results — added back for balance.
+- The McDermott et al. arXiv ID wasn't visible in the PDF text, so I independently confirmed it
+  directly against arxiv.org (title/authors/date match exactly).
+
+**Code (edge cases found and fixed, not just cosmetic):**
+- `code/01_eda_cbc_glucose_demographics.ipynb` had 3 real bugs: a boolean compared with `.notna()`
+  that silently always returned the full sample size instead of the valid-response count; a
+  `pd.cut` boundary that put participants exactly at the clinical cutoffs (HbA1c 5.7 and 6.5) into
+  the wrong category; and a markdown claim ("median X, Y, Z") with no cell actually computing a
+  median. All three fixed and the notebook re-executed against the real data — one write-up number
+  changed slightly as a result (median WBC by group: 6.5/6.8/7.4, was 6.5/6.9/7.4).
+- `code/02_baseline_model_and_figures.ipynb`: NHANES "refused"/"don't know" education codes (7, 9)
+  were being fed into the model as if they were real education levels — recoded to missing. Also
+  hardened `confusion_matrix` against a label-dropping edge case. This shifted the threshold table
+  very slightly (e.g., at the 0.3 threshold: sensitivity 67.6%→68.7%, NPV 95.2%→95.4%) — the Word
+  doc's numbers were updated to match exactly.
+
+**Additional graphs — my recommendation: don't add one.** The notebook also produces a correlation
+heatmap and a feature-importance bar chart; I did not embed either in the Word doc. Reasoning: body
+content is already ~3,240 words plus a table and a figure, and I can't render this machine's output
+to confirm the exact page count (no LibreOffice/pandoc installed here) — adding a second image is
+the kind of change that could push it over the 6-page cap without me being able to see the result.
+Both figures are in the notebook if you want them pulled in — the feature-importance chart would be
+the stronger addition since it directly backs an existing sentence in Section 5.
+
+- [ ] **Open the .docx in Word and check the actual page count** (same caveat as before — still
+  can't render it here). Tell me if it's over 6 pages and I'll trim, or if there's room and you
+  want the feature-importance figure added.
 - [ ] Read through for tone — this is still a draft, not a final copy-edit.
 
 ## 1. Papers still not obtained (4 of 18 — down from 10)

@@ -10,37 +10,51 @@ PDFs are in `papers/`, numbered to match the References list in the Research Pla
 checked directly against that source's own PDF (not taken from an abstract snippet or a search
 summary) before being used in the draft — see "Verified facts actually used" under each entry.
 
+**This list has been through two independent fact-check passes**, the second done specifically to
+catch anything the first missed (wrong direction of effect, wrong year/volume, unsupported added
+detail, etc.) — see "Second-pass corrections" at the bottom for exactly what changed and why.
+
 ## Downloaded and verified against full text (14 of 18 cited papers)
 
 1. **`01_horton_top25_lab_tests_AJCP2019.pdf`** — S. Horton, K. A. Fleming, M. Kuti, L.-M. Looi,
    S. A. Pai, S. Sayed, and M. L. Wilson, "The Top 25 Laboratory Tests by Volume and Revenue in
-   Five Different Countries," Am. J. Clin. Pathol., vol. 151, no. 5, pp. 446–451, 2019,
+   Five Different Countries," Am. J. Clin. Pathol., vol. 151, no. 5, pp. 446–451, May 2019,
    doi: 10.1093/ajcp/aqy165.
    Verified: a CBC was the single most common test by volume at 4 of 5 referral hospitals studied
    (US, India, Kenya, Malaysia, Nigeria), and appeared in the top-25 list at all 5.
 
 2. **`02_idf_diabetes_atlas_11thed_2025.pdf`** — International Diabetes Federation, IDF Diabetes
    Atlas, 11th ed. Brussels: IDF, 2025.
-   Verified: 589 million adults worldwide live with diabetes; 43% of cases are undiagnosed.
+   Verified: 589 million adults **aged 20–79** worldwide live with diabetes; 43% of cases are
+   undiagnosed. (The age qualifier was dropped from the first draft pass — fixed.)
 
 3. **`03_nchs_databrief516_diabetes_prevalence_2024.pdf`** — J. A. Gwira, C. D. Fryar, and Q. Gu,
    "Prevalence of Total, Diagnosed, and Undiagnosed Diabetes in Adults: United States, August
    2021–August 2023," NCHS Data Brief 516, Nov. 2024, doi: 10.15620/cdc/165794.
    Verified exact figures: total diabetes prevalence 15.8%, diagnosed 11.3%, undiagnosed 4.5% of
-   US adults.
+   US adults 20 and older.
+
+4. **CDC, "A U.S. Report Card," Diabetes.** [Online]. Available:
+   https://www.cdc.gov/diabetes/communication-resources/diabetes-statistics.html
+   Webpage, not a paper — cited alongside [3] for the same prevalence figures, as general context
+   rather than as an independent numeric source. Not independently re-verified beyond that.
 
 5. **`05_guo_cbc_opportunistic_screening_Nature2026.pdf`** — X. Guo, N. Zhang, B. Li, X. Yu,
    J. Guo, and G. Dan, "Using machine learning to identify individuals at elevated risk of
    diabetes from low-cost complete blood count data for opportunistic screening," Sci. Rep.,
-   2026, doi: 10.1038/s41598-026-59213-3.
+   vol. 16, Art. no. 29445, 2026, doi: 10.1038/s41598-026-59213-3.
    Verified: CBC-only LightGBM model, AUROC 0.821 (development) / 0.791 (independent 2024
-   temporal validation), n=70,725 development + 26,650 validation, Shenzhen.
+   temporal validation), n=70,725 development + 26,650 validation, Shenzhen University General
+   Hospital. (The first draft pass called this "a Chinese tertiary hospital" — the paper itself
+   never uses that word, and only says "single-center." Fixed to name the hospital directly.)
 
 6. **`06_mansoori_hematological_factors_MASHAD_Nature2022.pdf`** — A. Mansoori et al., "Prediction
    of type 2 diabetes mellitus using hematological factors based on machine learning approaches: a
-   cohort study analysis," Sci. Rep., vol. 12, 2022, doi: 10.1038/s41598-022-27340-2.
+   cohort study analysis," Sci. Rep., vol. 13, Art. no. 663, 2023, doi: 10.1038/s41598-022-27340-2.
    Verified: MASHAD cohort (Iran), ~9,000 adults 35–65; bootstrap-forest model; age and WBC the
-   most influential predictors.
+   most influential predictors. **Correction (second pass)**: the first draft pass cited this as
+   "vol. 12, Jan. 2022" — the PDF's own footer reads "Scientific Reports | (2023) 13:663." Volume
+   and year were both wrong; fixed. The DOI itself (which contains "2022") is unchanged and correct.
 
 7. **Not downloaded** — N. Kamkar et al., "A machine learning-based framework for predicting type
    2 diabetes mellitus using hematological indices," Am. Heart J. Plus, 2026,
@@ -51,7 +65,9 @@ summary) before being used in the draft — see "Verified facts actually used" u
    "The Association of Red Cell Distribution Width with Glycated Hemoglobin among Healthy Adults
    without Diabetes Mellitus," Cardiology, vol. 122, no. 2, pp. 129–132, 2012,
    doi: 10.1159/000339225. Only the title-level claim is used in the draft (RDW associated with
-   HbA1c in healthy, non-diabetic adults) — not independently full-text verified.
+   HbA1c in healthy, non-diabetic adults) — not independently full-text verified. **Correction
+   (second pass)**: the first draft pass added the word "directly" to this claim, which isn't
+   confirmable from the title alone; removed.
 
 9. **Not downloaded** — G. Engström, J. G. Smith, M. Persson, P. M. Nilsson, O. Melander, and
    B. Hedblek, "Red cell distribution width, haemoglobin A1c and incidence of diabetes mellitus,"
@@ -83,7 +99,11 @@ summary) before being used in the draft — see "Verified facts actually used" u
     were attenuated to non-significance after adjusting for family history, fasting glucose, and
     smoking; neutrophil:lymphocyte ratio showed no significant association at all (OR 0.89, ns).
     The draft no longer groups this with the meta-analysis as uniformly confirmatory — it is now
-    cited for the more mixed picture it actually shows.
+    cited for the more mixed picture it actually shows. **Second-pass correction**: the first
+    corrected draft still omitted the paper's actual headline finding — lymphocyte count alone
+    remained significantly associated with incident diabetes after the same full adjustment (OR
+    1.96, 95% CI 1.13–3.37), the strongest single association in the study, which the authors
+    attribute to insulin sensitivity rather than inflammation. Now added.
 
 13. **`13_mertoglu_nlr_plr_DiabetesMetabSyndr2017.pdf`** — C. Mertoglu and M. Gunay,
     "Neutrophil-Lymphocyte ratio and Platelet-Lymphocyte ratio as useful predictive markers of
@@ -122,6 +142,10 @@ summary) before being used in the draft — see "Verified facts actually used" u
 17. **`17_mcdermott_smart_reflex_testing_arxiv2023.pdf`** — M. McDermott, A. Dighe, P. Szolovits,
     Y. Luo, and J. Baron, "Using Machine Learning to Develop Smart Reflex Testing Protocols,"
     arXiv:2302.00794, 2023.
+    The arXiv ID isn't visible in the extracted PDF text itself (just the PDF's internal creation
+    date, Feb. 1, 2023), so the second verification pass flagged it for a direct check — confirmed
+    by fetching arxiv.org/abs/2302.00794 directly: title, all 5 authors, and submission date
+    (Feb. 1, 2023) match exactly.
 
 18. **Not downloaded** — H. Bang et al., "Development and validation of a patient self-assessment
     score for diabetes risk," Ann. Intern. Med., vol. 151, no. 11, pp. 775–783, 2009,
@@ -141,6 +165,37 @@ summary) before being used in the draft — see "Verified facts actually used" u
     multivariable-adjusted) — the **opposite direction** from RDW's association with incident
     diabetes in a non-diabetic population (refs 8–9). The draft now explicitly notes this
     direction difference rather than treating "RDW and diabetes" as one uniform relationship.
+
+## Second-pass corrections (summary)
+
+An independent, adversarial re-check (separate from the pass that produced the entries above) was
+run specifically to catch anything the first pass missed. It confirmed the large majority of
+claims exactly and found these concrete errors, all now fixed in the draft and in this file:
+
+- **[1] Horton**: publication month was wrong (Apr. → May 2019).
+- **[2] IDF Atlas**: dropped the Atlas's own "aged 20–79" qualifier on the 589 million figure —
+  added back in both places the draft uses it.
+- **[4] CDC webpage**: was cited but never logged in this file at all — added above.
+- **[5] Guo et al.**: draft called it "a Chinese tertiary hospital," a descriptor the paper itself
+  never uses — corrected to name the actual hospital.
+- **[6] Mansoori et al.**: wrong volume and year (cited as vol. 12, 2022; actually vol. 13, article
+  663, 2023, per the PDF's own footer) — the single most serious citation-detail error found.
+- **[8] Veeranna**: draft added the word "directly," which isn't supported by the title alone —
+  removed.
+- **[12] Lorenzo et al. (IRAS)**: the draft's framing of this study as "attenuated to
+  non-significance" omitted the paper's own actual headline finding (lymphocyte count remained
+  significantly associated, OR 1.96) — added.
+- **[17] McDermott et al.**: arXiv ID independently confirmed directly against arxiv.org (see
+  entry above) since it wasn't visible in the PDF's own extracted text.
+
+Also checked and found internally consistent: all of Section 5's numbers (AUROC 0.743/0.783/0.811,
+sample sizes, threshold table, feature-importance ranking) were re-verified character-for-character
+against `code/02_baseline_model_and_figures.ipynb`'s actual executed output — no discrepancies.
+One internal-consistency issue was found and fixed in the draft itself (not a citation issue): the
+draft had implied all 11,933 merged participants have CBC data, when only 7,593 (63.6%, per Table
+1) do — Sections 3 and 5 now say this correctly, and a note was added clarifying why Table 1's
+"CBC + HbA1c" count (6,689, using WBC presence as a proxy for CBC) differs slightly from the
+baseline model's own modeling sample (6,678, requiring all 12 CBC columns present).
 
 ## Still not obtained (4 of 18)
 
