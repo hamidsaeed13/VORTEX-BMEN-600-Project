@@ -159,3 +159,79 @@ demographics-only logistic regression (**0.743**), CBC + demographics logistic r
 suggests CBC adds discrimination beyond demographics on this split (AUROC gain **0.040**).
 These remain unweighted exploratory results; the threshold table reports deferred tests and
 positive cases missed alongside sensitivity/NPV, and no safe deferral threshold is established.
+
+### Cohort definition and filtering (notebook 03)
+
+The recommended primary research population is **adults aged 20+ who explicitly report no
+prior diabetes diagnosis**, with no reported current insulin/diabetes pills, an observed HbA1c,
+and a complete CBC. Require an examination and positive phlebotomy weight. Exclude recorded
+pregnancy and indeterminate pregnancy status among females aged 20–44. Pregnancy information
+outside that public reporting band is unavailable; this is not a confirmed nonpregnant cohort.
+Borderline diagnosis responses are separate and included only in a sensitivity analysis.
+Age 20 is an analytic choice, not a clinical screening cutoff; age 18+ is also compared.
+
+Run `python -m pip install -r code/requirements-cohort.txt`, then
+`python code/cohort_analysis.py` from the repository root, or run
+`code/03_cohort_definition_and_filtering.ipynb` from the root or `code/` directory.
+The notebook is self-contained and does not depend on earlier notebook state.
+Outputs in `code/assets/cohort/` include cohort flow/counts, diagnosis strata, model/fold
+comparisons, out-of-fold predictions, threshold tables, and prevalence/ROC figures.
+See `reports/cohort_definition_analysis.md` for the recommendation and interpretation.
+
+The seven comparisons retain the original all-age reference and include adults of all diagnosis
+statuses, the primary cohort, ages 18+, ages 35–70, ages 65+, and inclusion of borderline
+responses. Cohort choice is based on the question, not the highest AUROC. Ages 35–70 alone do
+not implement the USPSTF population: BMI and symptom eligibility are not established here.
+All four models use matched five-fold splits within each cohort, training-fold preprocessing,
+and one-hot categorical encoding. These are new exploratory cross-validation results, not a
+replication of notebook 02's single split. Survey-weighted modelling, design-aware uncertainty,
+calibration and separate final evaluation remain outstanding. Weighted prevalence is descriptive
+only; models and predictive metrics remain unweighted.
+
+### Survey-weighted calibration (notebook 04)
+
+`code/04_survey_weighted_calibration.ipynb` and `code/weighted_calibration_analysis.py`
+extend the fixed primary cohort with WTPH2YR-weighted fitting, calibration and evaluation.
+Run `python code/weighted_calibration_analysis.py` after installing
+`code/requirements-cohort.txt`. Outputs and the regenerated interpretation report are
+`code/assets/weighted/` and `reports/weighted_calibration_analysis.md`.
+
+Five outer folds hold out entire survey PSUs; three inner grouped folds fit development-only
+sigmoid calibration and select exploratory thresholds targeting 95% weighted sensitivity.
+SDMVSTRA/SDMVPSU guide splitting and conditional jackknife variance, not prediction.
+Class balancing is removed; imputation/scaling remain unweighted within training folds.
+The full survey design is retained before selecting the analytic domain.
+
+Calibrated weighted AUROC is 0.715 for demographics and 0.781 for CBC + demographics logistic
+regression. The paired conditional interval for the gain includes zero. Mean calibrated CBC
+logistic risk is 1.99%, close to weighted prevalence; this alone does not establish calibration.
+Its outer-fold policy evaluation defers 1,013 observed tests and misses 3/106 positive labels
+(95.8% weighted sensitivity). This does not establish safe clinical deferral. Intervals condition
+on fitted scores/thresholds and exclude training variability; independent validation remains.
+
+### Research extension: BMI, robustness and independent evaluation (notebooks 05–06)
+
+The new extension preserves notebooks 01–04. Install `code/requirements-cohort.txt`, then run:
+
+```sh
+python code/acquire_extension_data.py
+python code/research_extension.py --bootstrap 100
+python code/report_research_extension.py
+python code/verify_research_extension.py
+```
+
+The acquisition step downloads public CDC BMI and 2017–2018 inputs if missing, with a hash
+manifest. The analysis adds matched BMI baselines, red/white-cell ablations, low-hemoglobin
+and fasting-endpoint sensitivities, 100 full-pipeline PSU resamples, frozen independent-cycle
+evaluation, subgroup/selection audits and hypothetical decision curves. Outputs and frozen
+models are in `code/assets/extension/`; these joblib files are trusted project outputs, not
+files to load from unknown sources. Notebooks 05–06 display completed results; notebook 05
+can rerun the full analysis by changing `RUN_ANALYSIS`.
+
+CBC adds 0.023 AUROC beyond demographics+BMI in the current cohort, with an exploratory
+full-refit interval spanning zero. Ranking improves in the independent earlier cycle while
+probability error worsens. See [results](reports/research_extension_results.md),
+[literature matrix](literature_review/extension_evidence_matrix.md),
+[draft text](drafts/Research_Extension_Methods_Results.md) and
+[publication assessment](reports/publication_readiness.md). These results do not establish
+clinical safety, cost savings or readiness for journal submission.

@@ -8,6 +8,12 @@ Checkboxes reflect status as of this writing. `[x]` = done, `[~]` = in progress 
 `[ ]` = not started. Re-check this list as work lands rather than trusting it blindly — it's a
 snapshot.
 
+**Extension progress (2026-11-02):** Notebooks 05–06 implement matched BMI/block comparisons,
+low-hemoglobin and fasting-endpoint sensitivity, full-refit survey resampling and frozen-model
+independent-cycle evaluation. See [results](../reports/research_extension_results.md) and
+[publication readiness](../reports/publication_readiness.md). These are research findings,
+including negative results; original tasks and team decisions below remain for review.
+
 ---
 
 ## Phase 1 — Data acquisition & merging
@@ -29,6 +35,9 @@ snapshot.
 - [x] Missingness summary
 
 ## Phase 3 — Cohort / eligibility definition (blocking item)
+
+**Progress:** Notebook 03 implements a recommended adults-20+ cohort and recomputes counts;
+team population/endpoint decisions remain open. See [cohort analysis](../reports/cohort_definition_analysis.md).
 
 - [ ] Decide and document the intended population: age range (12+? adults only?), known-diagnosis
       policy (include/exclude/stratify), pregnancy exclusion
@@ -53,6 +62,8 @@ snapshot.
 
 ## Phase 5 — Missing data handling
 
+**Progress:** Notebooks 03–04 refit imputers inside each training fold.
+
 - [x] Baseline: median-impute numeric CBC/age/income; most-frequent-impute categorical
       demographics
 - [ ] Move imputers inside the `ColumnTransformer`/pipeline so they refit per CV fold (not fit
@@ -61,6 +72,9 @@ snapshot.
       structural (e.g. adult education is undefined under age 20), not random
 
 ## Phase 6 — Encoding categorical variables
+
+**Progress:** Notebooks 03–04 one-hot encode sex, race/ethnicity and education inside training
+folds, retaining all levels; notebook 02 retains its original exploratory encoding.
 
 - [ ] `sex` (`RIAGENDR`): explicit `OneHotEncoder(drop="if_binary")` instead of raw int
 - [ ] `race_eth` (`RIDRETH3`): `OneHotEncoder(handle_unknown="ignore")` — nominal, nothing ordinal
@@ -88,6 +102,10 @@ snapshot.
         the training fold of each CV split
 
 ## Phase 8 — Survey design (NHANES-specific)
+
+**Progress:** Notebook 04 uses WTPH2YR in classifiers, calibration and evaluation, with
+SDMVSTRA/SDMVPSU for grouped validation and conditional variance estimates. Fasting-glucose
+weighting remains open. See [weighted analysis](../reports/weighted_calibration_analysis.md).
 
 - [ ] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
 - [ ] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
@@ -164,6 +182,10 @@ demographics-only).
 
 ## Phase 10 — Modeling
 
+**Progress:** Age-only comparisons are in notebooks 02–04. Notebook 04 adds nested
+cluster-grouped validation with development-only calibration/threshold selection; further
+model comparisons and independent final validation remain open.
+
 - [x] Baseline logistic regression (demographics-only and CBC+demographics)
 - [x] Baseline random forest (CBC+demographics), `class_weight="balanced"`
 - [x] Single stratified train/test split, ROC curves, AUROC comparison
@@ -178,6 +200,10 @@ demographics-only).
       final reporting — the current test set has already been inspected across models/thresholds
 
 ## Phase 11 — Evaluation
+
+**Progress:** Notebooks 02–04 report deferred/flagged/missed counts. Notebook 04 adds weighted
+calibration diagnostics and conditional design intervals, which exclude training variability;
+full-procedure uncertainty and HbA1c/fasting-glucose sensitivity remain open.
 
 - [x] First-pass threshold table (sensitivity/specificity/NPV/PPV across thresholds)
 - [ ] Report tests flagged, tests deferred, and positive labels missed together at every

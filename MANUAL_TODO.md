@@ -62,16 +62,17 @@ each source's title or abstract directly supports.
 
 ## 2. Decisions and confirmations only the team can make
 
-- [ ] **Author Contributions** — names are in, but Jacob Kraft and Ahenkan Yeboah's parts are still
-  future tense ("will review" / "will fact-check"), and Emmanuella Osifo's is blank. Fill in what's
-  actually been done before submission — don't just convert "planned" to "done" without it
-  happening.
+- [ ] **Author Contributions** — Review and update all five members' contributions for the
+  final submission, then have each member confirm their entry.
 - [ ] **AI-Assisted Work statement** — confirm the described tools/checks match what the team
   actually did, beyond what I can see in this repo.
 - [ ] **Intended screening population** — the current exploratory model includes participants as
   young as 12 and both diagnosed and undiagnosed people. Decide the real intended population
   (e.g., adults only, no prior diagnosis) before the final report; the current numbers will change
   once that's applied.
+  **Progress note:** Notebook 03 implements a recommended adults-20+ cohort with explicit
+  no prior diagnosis (4,612 participants, 106 positive HbA1c results); team agreement on
+  the intended population remains open. See [cohort analysis](reports/cohort_definition_analysis.md).
 - [ ] **Real dataset access date** — Section 3 currently says "to be confirmed." I don't have the
   team's actual download date and didn't want to guess one.
 - [ ] **Team size vs. course template** — the template mentions teams of 3–4; the signed Team
@@ -99,5 +100,20 @@ using the same cohort/split as the other models, with matched threshold comparis
 exported AUROC/threshold tables in `code/assets/`. The remaining improvements are listed in
 the notebook's own "Next steps" section.
 
+**Progress note (notebooks 03–04):** One-hot encoding, preprocessing refitted per fold,
+survey-weighted fitting/evaluation, and development-only calibration are implemented.
+Notebook 04 adds nested cluster-grouped validation and conditional survey-design intervals;
+those intervals exclude model-training variability. Independent validation, further model
+comparisons and clinical-policy justification remain open. See the
+[weighted analysis report](reports/weighted_calibration_analysis.md) for details.
+
 ---
 *I'll keep this file updated as I continue refining the Research Plan.*
+
+**Progress note (2026-11-02):** Notebooks 05–06 add the matched BMI comparison,
+red-cell/fasting-glucose sensitivity checks, 100 full-refit survey resamples and frozen-model
+2017–2018 evaluation. See [results](reports/research_extension_results.md), the
+[literature update](literature_review/extension_evidence_matrix.md) and
+[publication-readiness assessment](reports/publication_readiness.md). Team review, three
+full-text gaps and independent clinical/statistical verification remain open; no clinical
+deferral policy or publication readiness is established. Original checklist wording is preserved.

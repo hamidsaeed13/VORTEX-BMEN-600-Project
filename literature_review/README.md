@@ -168,3 +168,11 @@ with a zero fasting-sample weight that are not actually eligible for the fasting
 (now flagged with a note). See the audit report itself for the complete technical findings,
 including several items correctly scoped as final-project work rather than midterm blockers
 (survey weighting, categorical encoding, calibration, cross-validation).
+
+## Final-project extension — 2026-11-02
+
+The original notes above are preserved. The new [evidence matrix](extension_evidence_matrix.md)
+and [21-source CSV](extension_evidence_matrix.csv) distinguish closest prediction studies,
+biological context and reporting methods. See the [search log](extension_search_log.md) for
+access limits; the three original full-text gaps remain unresolved. The synthesis now addresses
+the matched BMI comparator, HbA1c/red-cell effects and independent-cycle evaluation.
