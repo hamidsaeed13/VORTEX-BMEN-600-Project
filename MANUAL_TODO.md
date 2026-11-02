@@ -94,8 +94,10 @@ Per the audit's own recommended sequence, these are improvements for the final p
 required before tomorrow: one-hot encoding for race/education instead of raw numeric codes, NHANES
 survey weights and design variables in the actual model fit, calibration checks (the current models'
 mean predicted risk doesn't match the true prevalence), stratified k-fold cross-validation with
-the pipeline refit per fold, and a simple age-only baseline for comparison. All noted in the
-notebook's own "Next steps" section.
+the pipeline refit per fold, and further model comparisons. The age-only baseline is now implemented in notebook 02,
+using the same cohort/split as the other models, with matched threshold comparisons and
+exported AUROC/threshold tables in `code/assets/`. The remaining improvements are listed in
+the notebook's own "Next steps" section.
 
 ---
 *I'll keep this file updated as I continue refining the Research Plan.*

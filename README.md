@@ -138,7 +138,9 @@ Known Uncertainties), not as an interchangeable primary outcome.
   files and produces the descriptive statistics and figures used in Section 5.
 - `code/02_baseline_model_and_figures.ipynb` depends on nothing from notebook
   01 being run first (it reloads the raw files itself) and produces the
-  baseline model, ROC curves, and threshold table used in Section 5.
+  baseline models, ROC curves, and threshold comparisons. It now includes an age-only
+  logistic baseline on the same cohort/split and exports comparison CSVs plus the ROC figure
+  to `code/assets/`.
 
 ## Status
 
@@ -148,3 +150,12 @@ weighting, categorical encoding, and cross-validation are the next steps
 before the final report. See `MANUAL_TODO.md` and
 `reports/Midterm_Research_Plan_Verification_Report.md` for the current list of
 open items.
+
+### Age-only baseline comparison
+
+Notebook 02 now compares age-only logistic regression (held-out AUROC **0.689**),
+demographics-only logistic regression (**0.743**), CBC + demographics logistic regression
+(**0.783**), and CBC + demographics random forest (**0.811**). The matched logistic comparison
+suggests CBC adds discrimination beyond demographics on this split (AUROC gain **0.040**).
+These remain unweighted exploratory results; the threshold table reports deferred tests and
+positive cases missed alongside sensitivity/NPV, and no safe deferral threshold is established.
