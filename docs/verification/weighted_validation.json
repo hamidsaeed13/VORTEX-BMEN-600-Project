@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "participants": 4612,
+  "positive_labels": 106,
+  "models": 4,
+  "outer_folds": 5,
+  "inner_fit_audits": 60,
+  "design_strata": 15,
+  "design_psus": 30,
+  "checks": [
+    "unique predictions",
+    "PSU separation",
+    "matched model folds",
+    "positive weights",
+    "weighted Brier/prevalence/mean risk",
+    "weighted sensitivity/NPV",
+    "integer deferred/missed counts",
+    "PSU-total jackknife prevalence",
+    "executed notebook schema"
+  ]
+}

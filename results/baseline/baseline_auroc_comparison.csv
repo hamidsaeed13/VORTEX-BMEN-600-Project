@@ -1,0 +1,5 @@
+model,AUROC,AUROC_gain_over_age
+Age only (logistic),0.6888331853317297,0.0
+Demographics only (logistic),0.7429455691317364,0.054112383800006714
+CBC + demographics (logistic),0.7830446365342896,0.09421145120255991
+CBC + demographics (random forest),0.8112586131313019,0.12242542779957222
