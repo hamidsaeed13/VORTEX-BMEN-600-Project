@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "current_participants": 4612,
+  "current_positives": 106,
+  "independent_participants": 3943,
+  "independent_positives": 132,
+  "fasting_participants": 2375,
+  "bootstrap_successful": 100,
+  "bootstrap_failures": 0,
+  "evidence_sources": 21,
+  "checks": [
+    "download hashes",
+    "protocol hash",
+    "matched participants and clusters",
+    "weighted metrics and policy accounting",
+    "matched fasting endpoints and weights",
+    "full-refit replicate counts and paired intervals",
+    "frozen model hashes and reproducible inference",
+    "predictor leakage exclusions",
+    "notebook schemas and completed results cells"
+  ]
+}
