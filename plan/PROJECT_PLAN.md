@@ -89,9 +89,9 @@ snapshot.
 
 ## Phase 8 — Survey design (NHANES-specific)
 
-- [ ] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
-- [ ] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
-- [ ] State explicitly whether reported performance targets the analytic sample or a
+- [~] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
+- [x] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
+- [x] State explicitly whether reported performance targets the analytic sample or a
       population-level estimate; keep class-balancing weights conceptually separate from survey
       weights
 
