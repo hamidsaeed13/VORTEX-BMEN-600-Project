@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "participants": 4612,
+  "positives": 106,
+  "models": 2,
+  "blocks": 9,
+  "repeats": 20,
+  "outer_folds": 5,
+  "seed": 20261116,
+  "checks": [
+    "saved calibrated prediction and fold reproduction",
+    "inner/outer PSU separation",
+    "donor bijections within held-out PSU",
+    "labels and weights unchanged",
+    "complete finite perturbed probabilities"
+  ],
+  "protocol_sha256": "2c13f51ba520243cd6a3fcfe67f4561ab2b208449c9d2ad35c68f9c1179e994b",
+  "independent_checks": [
+    "saved baseline predictions and weights",
+    "within-PSU donor membership and bijections",
+    "all 360 probability vectors and 1440 metric differences",
+    "all 72 importance summaries",
+    "protocol hash"
+  ]
+}

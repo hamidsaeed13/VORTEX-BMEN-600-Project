@@ -66,6 +66,16 @@ for previous locations and the [script guide](scripts/README.md) for commands.
 </details>
 
 <details>
+<summary>Held-out predictor interpretation</summary>
+
+- [Analysis script](scripts/analysis/heldout_permutation_importance.py)
+- [Analysis specification](docs/methods/permutation_importance_protocol.md)
+- [Findings](docs/findings/permutation_importance.md)
+- [Outputs and donor audit](results/permutation_importance/)
+
+</details>
+
+<details>
 <summary>Literature, writing and project management</summary>
 
 - [Literature evidence and source notes](literature/README.md)

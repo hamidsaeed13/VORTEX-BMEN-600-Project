@@ -21,7 +21,7 @@ The local research commits `3558e76` and `9fd7466` already contain much of that 
 | 8 | WTPH2YR/WTSAF2YR; PSU-grouped folds; conditional design intervals | Independent statistical review |
 | 9 | Matched BMI comparisons, red/white-cell ablations, low-HGB checks | Other candidate blocks remain candidates; integration with Ella's contribution |
 | 10 | Age baseline, logistic/forest models, nested development-only procedures | Original demographics-only forest and gradient boosting tasks |
-| 11 | Calibration, AP/proper scores, policy accounting, subgroup/fasting checks, 100 full refits, older-cycle transport | Permutation importance if making importance claims; stronger uncertainty/reproduction |
+| 11 | Calibration, AP/proper scores, policy accounting, subgroup/fasting checks, 100 full refits, older-cycle transport; held-out grouped permutation supplement added 2026-11-16 | Stronger uncertainty/reproduction; permutation SD describes perturbation variation, not inferential uncertainty |
 | 12 | Exploratory 95%-sensitivity development thresholds and decision curves | Team-justified operating point; no established clinical or economic benefit |
 | 13 | Extension evidence matrix and BMI literature | Three original full-text gaps and second-reader review |
 | 14 | Pinned `requirements.txt`, runnable scripts | Review old notebook narrative/setup statements |

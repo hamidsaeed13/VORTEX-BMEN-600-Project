@@ -217,8 +217,10 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
       baseline is not sufficient on its own); fit any calibrator within development data only
 - [x] Add confidence intervals / design-aware uncertainty (plain bootstrap on a fixed split
       ignores NHANES clustering/stratification)
-- [ ] Use held-out permutation importance instead of impurity-based importance if feature
-      interpretation claims are made
+- [x] Use held-out permutation importance instead of impurity-based importance for predictor
+      interpretation: [analysis and limitations](../findings/permutation_importance.md).
+      Two existing models, nine blocks, 20 within-PSU permutations; frozen development-only
+      preprocessing/calibration and weighted evaluation. Permutation SD is not a confidence interval.
 - [x] Subgroup/sensitivity analysis: compare HbA1c-based and fasting-glucose-based results to
       check sensitivity to HbA1c-related measurement effects (e.g. anemia)
 - [ ] Add `savefig` calls in the notebooks so `results/baseline/*.png` regenerate automatically instead

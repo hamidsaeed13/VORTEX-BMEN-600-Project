@@ -8,6 +8,8 @@ Install `requirements.txt` at the project root. From that root:
 | Compare cohorts | `python scripts/analysis/cohort_analysis.py` | `results/cohort/` |
 | Weighted validation and calibration | `python scripts/analysis/weighted_calibration_analysis.py` | `results/weighted_calibration/` |
 | CBC collinearity and nested PCA supplement | `python scripts/analysis/cbc_diagnostics.py` | `results/cbc_diagnostics/`, diagnostic report and validation JSON |
+| Held-out grouped predictor importance | `python scripts/analysis/heldout_permutation_importance.py` | `results/permutation_importance/`, findings and validation JSON |
+| Independently verify permutation importance | `python scripts/verification/verify_permutation_importance.py` | Reconstructs exported metric differences and checks donor accounting |
 | Final-cohort description figure | `python scripts/figures/plot_final_cohort.py` | `results/cohort/` |
 | BMI/robustness/independent-cycle analysis | `python scripts/analysis/research_extension.py --bootstrap 100` | `results/research_extension/` |
 | Generate extension reports and results notebooks | `python scripts/reporting/report_research_extension.py` | findings, draft text, notebooks 05–06 |
