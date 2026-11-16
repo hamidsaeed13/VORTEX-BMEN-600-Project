@@ -1,0 +1,179 @@
+{
+  "ella_n": 5144,
+  "ella_positive_57": 1552,
+  "ella_positive_65": 152,
+  "ella_diagnosis_counts": {
+    "2.0": 4929,
+    "3.0": 215
+  },
+  "ella_pregnancy_counts": {
+    "-1.0": 4151,
+    "2.0": 972,
+    "3.0": 21
+  },
+  "ella_missing_hgb": 19,
+  "ella_no_red_features": [
+    "LBXWBCSI",
+    "LBXLYPCT",
+    "LBXMOPCT",
+    "LBXNEPCT",
+    "LBXEOPCT",
+    "LBXBAPCT",
+    "LBDLYMNO",
+    "LBDMONO",
+    "LBDNENO",
+    "LBDEONO",
+    "LBDBANO",
+    "LBXPLTSI",
+    "LBXMPSI",
+    "LBXNRBC"
+  ],
+  "setayesh_n": 4930,
+  "setayesh_positives": 152,
+  "setayesh_diagnosis_counts": {
+    "2.0": 4718,
+    "3.0": 212
+  },
+  "setayesh_nonpositive_corrected_weights": 0,
+  "setayesh_recorded_pregnant": 37,
+  "setayesh_reported_medication": 85,
+  "ella_missing_hgb_retained_as_nonanemic": 19,
+  "ella_recomputed_model_scores": {
+    "A: age + sex": [
+      0.697,
+      0.012
+    ],
+    "B: age + sex + CBC": [
+      0.77,
+      0.018
+    ],
+    "C: B + BMI + waist": [
+      0.78,
+      0.014
+    ]
+  },
+  "ella_missing_hgb_excluded_anemia_n": 473,
+  "ella_nonanemic_n": 4671,
+  "proposal_checks": [
+    {
+      "pr": 14,
+      "snapshot_sha256": "6c30fe62fc0ca9b1b59c8801c7d55e18871c5139b08ffc30f8d098bc38368ea2",
+      "patch_sha256": "8e9a8e520789cac3b3035801c1f484a9c11c1243aa97a63e25dc078f076a4d27",
+      "source_cells_compile": true
+    },
+    {
+      "pr": 15,
+      "snapshot_sha256": "37ade6a11a7834bb52840059e5063bc3046c9d032e2760cc1cd14dde4b1849ba",
+      "patch_sha256": "079f820dd7eceee3cc4806c70050dd0d3770f7c26bdce76a88e07a8c263bf6f6",
+      "source_cells_compile": true
+    }
+  ],
+  "reviewed_heads": {
+    "15": "8500a82a12ebe95a6f6a50b3ed422b3bba3323ac",
+    "14": "01d07d229287f2d0b3c61ebca9c040aa93c2b3c0",
+    "13": "1336565f01623f9177cafd41e3b77b711b84d2ea"
+  },
+  "review_date": "2026-11-16",
+  "scope": "PR13/14 cohort and PR14 computational source reproduction; proposed PR14 cells 1,4\u20138 (cached BMI, no download); proposed PR15 setup, preparation, cohort, preprocessing, model fits and threshold accounting. Plots and PR15 importance cell not rerun. Notebook schemas validated.",
+  "pr14_proposed_validation": {
+    "status": "passed",
+    "non_low_hgb_observed_n": 4652,
+    "summary": [
+      {
+        "Population": "Whole cohort",
+        "n": 5144,
+        "Positive labels": 1552,
+        "Model": "A: age + sex",
+        "AUROC (mean)": 0.697,
+        "AUROC (SD)": 0.012
+      },
+      {
+        "Population": "Whole cohort",
+        "n": 5144,
+        "Positive labels": 1552,
+        "Model": "B: + CBC",
+        "AUROC (mean)": 0.77,
+        "AUROC (SD)": 0.018
+      },
+      {
+        "Population": "Whole cohort",
+        "n": 5144,
+        "Positive labels": 1552,
+        "Model": "C: B + BMI + waist",
+        "AUROC (mean)": 0.78,
+        "AUROC (SD)": 0.014
+      },
+      {
+        "Population": "Whole cohort",
+        "n": 5144,
+        "Positive labels": 1552,
+        "Model": "D: B + hs-CRP",
+        "AUROC (mean)": 0.781,
+        "AUROC (SD)": 0.018
+      },
+      {
+        "Population": "Whole cohort",
+        "n": 5144,
+        "Positive labels": 1552,
+        "Model": "B without red-cell features",
+        "AUROC (mean)": 0.73,
+        "AUROC (SD)": 0.014
+      },
+      {
+        "Population": "Observed HGB, not low by operational cutoff",
+        "n": 4652,
+        "Positive labels": 1364,
+        "Model": "A: age + sex",
+        "AUROC (mean)": 0.704,
+        "AUROC (SD)": 0.022
+      },
+      {
+        "Population": "Observed HGB, not low by operational cutoff",
+        "n": 4652,
+        "Positive labels": 1364,
+        "Model": "B: + CBC",
+        "AUROC (mean)": 0.779,
+        "AUROC (SD)": 0.008
+      },
+      {
+        "Population": "Observed ferritin subgroup",
+        "n": 1240,
+        "Positive labels": 181,
+        "Model": "B: age + sex + CBC",
+        "AUROC (mean)": 0.766,
+        "AUROC (SD)": 0.021
+      },
+      {
+        "Population": "Observed ferritin subgroup",
+        "n": 1240,
+        "Positive labels": 181,
+        "Model": "E: B + ferritin + TfR",
+        "AUROC (mean)": 0.77,
+        "AUROC (SD)": 0.012
+      }
+    ],
+    "red_cell_marker_removed": true,
+    "network_download_cell_skipped": true
+  },
+  "pr14_runtime_warning_count": 18792,
+  "pr14_convergence_warning_count": 0,
+  "pr15_proposed_validation": {
+    "status": "passed",
+    "n": 4930,
+    "positives": 152,
+    "age_sex_logistic_auroc": 0.6731777141598767,
+    "cbc_logistic_auroc": 0.7723188724950452,
+    "age_sex_forest_auroc": 0.5743008147985025,
+    "cbc_forest_auroc": 0.7469059678484915,
+    "threshold_accounting_passed": true
+  },
+  "pr15_runtime_warning_count": 15,
+  "pr15_convergence_warning_count": 0,
+  "pr14_patch_applies_to_reviewed_snapshot": true,
+  "pr15_patch_applies_to_reviewed_snapshot": true,
+  "review_html_checks": {
+    "tabs": 4,
+    "matching_panels": 4,
+    "local_markdown_links_exist": true
+  }
+}

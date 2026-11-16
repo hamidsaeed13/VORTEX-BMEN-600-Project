@@ -4,6 +4,7 @@
 - **[Methods](methods/):** analysis specification and cycle-harmonization decisions.
 - **[Findings](findings/):** interpretation reports and publication-readiness assessment.
 - **[Verification](verification/):** audit reports and machine-readable checks.
+- **[Reviews](reviews/TEAM_REVIEW.md):** evidence, proposed edits and local patch validation for teammates' contributions ([contributor tabs](reviews/TEAM_REVIEW.html)).
 - **[Course](course/):** assignment rubric, template, team contract and workstream spreadsheet.
 
 [File map](file-map.csv) lists the previous and current location of each moved file.

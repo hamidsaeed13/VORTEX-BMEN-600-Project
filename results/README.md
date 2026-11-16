@@ -6,6 +6,7 @@
 | `cohort/` | Cohort flow, comparisons, predictions and figures | cohort analysis and final-cohort plot scripts |
 | `weighted_calibration/` | Weighted validation, calibration, policy counts and conditional intervals | weighted calibration analysis |
 | `research_extension/` | BMI/block sensitivities, full-refit resampling and independent-cycle results | research extension and report scripts |
+| `cbc_diagnostics/` | Correlations, VIF, descriptive PCA plots/loadings, matched nested predictions and conditional intervals | `scripts/analysis/cbc_diagnostics.py` |
 
 See [script commands](../scripts/README.md). Numeric outputs and frozen models were moved
 without changing their contents during the organization cleanup. Frozen joblib files are
