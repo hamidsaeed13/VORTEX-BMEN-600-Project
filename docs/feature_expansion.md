@@ -6,7 +6,7 @@
 - Cohort: same 5,144 adults as Phase 8 (≥18, no prior diabetes diagnosis, not pregnant, valid WTPH2YR and HbA1c).
 - Outcome: HbA1c ≥5.7%.
 - Model: logistic regression with median imputation and scaling inside a pipeline; 5-fold stratified cross-validation (random_state=42); metric AUROC (mean and SD across folds).
-- Added `BMX_L` (body measures) to `data/raw/examination/`.
+- Added `BMX_L` (body measures) to `data/raw/2021_2023/` (reused if already present).
 - Serum glucose and insulin/HOMA-IR were **not** used as predictors because they directly measure the outcome.
 - hs-CRP and ferritin log-transformed (log1p) due to skew.
 

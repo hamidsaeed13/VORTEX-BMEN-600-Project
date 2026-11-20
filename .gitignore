@@ -3,3 +3,9 @@ Sugar Predictor/
 
 # OS cruft
 .DS_Store
+
+# Local Python/Jupyter environment files
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/
