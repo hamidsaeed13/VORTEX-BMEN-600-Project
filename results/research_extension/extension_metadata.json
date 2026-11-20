@@ -1,0 +1,60 @@
+{
+  "protocol_sha256": "336caf6221795d5acdf25499d660f4b6412316b46319715ffd9b532e82d1962c",
+  "bootstrap_requested": 100,
+  "bootstrap_failures": 0,
+  "elapsed_seconds": 151.4729881286621,
+  "cycle_counts": [
+    {
+      "cycle": "2021_2023",
+      "n": 4612,
+      "positives": 106,
+      "bmi_missing": 52,
+      "weighted_prevalence": 0.019881436273137577,
+      "eligible_before_labs": 4657,
+      "low_hgb": 421
+    },
+    {
+      "cycle": "2017_2018",
+      "n": 3943,
+      "positives": 132,
+      "bmi_missing": 57,
+      "weighted_prevalence": 0.020619028714090167,
+      "eligible_before_labs": 4137,
+      "low_hgb": 352
+    }
+  ],
+  "primary_specs": {
+    "demographics": [
+      "RIDAGEYR",
+      "INDFMPIR"
+    ],
+    "demographics_bmi": [
+      "RIDAGEYR",
+      "INDFMPIR",
+      "BMXBMI"
+    ],
+    "demographics_bmi_cbc": [
+      "RIDAGEYR",
+      "INDFMPIR",
+      "BMXBMI",
+      "LBXRBCSI",
+      "LBXHGB",
+      "LBXHCT",
+      "LBXMCVSI",
+      "LBXRDW",
+      "LBXWBCSI",
+      "LBXPLTSI",
+      "LBXLYPCT",
+      "LBXNEPCT",
+      "LBXMOPCT",
+      "LBXEOPCT"
+    ]
+  },
+  "drop_basophil_percentage": true,
+  "limits": [
+    "Internal/independent-cycle cross-sectional evidence, not clinical safety",
+    "Bootstrap fixes original split assignment; finite replicate tail precision",
+    "Operational low-hemoglobin flag is not etiologic anemia diagnosis",
+    "2017\u20132018 uses MEC weights; 2021\u20132023 uses phlebotomy weights"
+  ]
+}

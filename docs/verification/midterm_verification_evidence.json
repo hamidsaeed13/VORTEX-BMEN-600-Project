@@ -1,0 +1,622 @@
+{
+  "environment": {
+    "python": "3.9.6 (default, Apr 17 2026, 18:15:52) \n[Clang 21.0.0 (clang-2100.1.1.101)]",
+    "numpy": "2.0.2",
+    "pandas": "2.3.3",
+    "sklearn": "1.6.1",
+    "scipy": "1.13.1"
+  },
+  "01_eda_cbc_glucose_demographics": {
+    "executed_without_error": true,
+    "runtime_s": 0.5917320251464844
+  },
+  "eda_counts": {
+    "n_available": {
+      "CBC panel": 7593,
+      "Fasting glucose": 3672,
+      "HbA1c": 6715,
+      "Self-reported diabetes (valid answer)": 11736
+    },
+    "pct_of_full_sample": {
+      "CBC panel": 63.6,
+      "Fasting glucose": 30.8,
+      "HbA1c": 56.3,
+      "Self-reported diabetes (valid answer)": 98.3
+    }
+  },
+  "paired_counts": {
+    "n_with_CBC_and_label": {
+      "CBC + fasting glucose": 3657,
+      "CBC + HbA1c": 6689,
+      "CBC + self-reported diabetes": 7592
+    }
+  },
+  "labels": [
+    {
+      "definition": "Fasting glucose >= 126",
+      "n_available": 3672,
+      "n_flagged_abnormal": 430,
+      "pct_abnormal": 11.7
+    },
+    {
+      "definition": "HbA1c >= 6.5%",
+      "n_available": 6715,
+      "n_flagged_abnormal": 721,
+      "pct_abnormal": 10.7
+    },
+    {
+      "definition": "Self-reported diagnosis",
+      "n_available": 11736,
+      "n_flagged_abnormal": 1081,
+      "pct_abnormal": 9.2
+    }
+  ],
+  "02_baseline_model_and_figures": {
+    "executed_without_error": true,
+    "runtime_s": 1.7977657318115234
+  },
+  "baseline": {
+    "n": 6678,
+    "positive": 717,
+    "min_age": 12,
+    "age_ge80": 320,
+    "age_under18": 709,
+    "age_under20": 943,
+    "age_under18_positive": 0,
+    "known_diabetes_n": 816,
+    "known_diabetes_positive": 565,
+    "undiagnosed_no_diabetes_n": 5641,
+    "undiagnosed_no_diabetes_positive": 116,
+    "dx_counts": {
+      "0": {
+        "1.0": 251,
+        "2.0": 5525,
+        "3.0": 184,
+        "9.0": 1
+      },
+      "1": {
+        "1.0": 565,
+        "2.0": 116,
+        "3.0": 36,
+        "9.0": 0
+      }
+    },
+    "missing_education_under20": 943,
+    "missing_income": 836,
+    "auc_demo": 0.7429455691317364,
+    "auc_full_lr": 0.7830446365342896,
+    "auc_rf": 0.8112586131313019,
+    "thresholds": [
+      {
+        "threshold": 0.1,
+        "sensitivity": 0.944,
+        "specificity": 0.429,
+        "NPV": 0.985,
+        "PPV": 0.166,
+        "n_flagged": 1020
+      },
+      {
+        "threshold": 0.2,
+        "sensitivity": 0.821,
+        "specificity": 0.633,
+        "NPV": 0.967,
+        "PPV": 0.212,
+        "n_flagged": 694
+      },
+      {
+        "threshold": 0.3,
+        "sensitivity": 0.687,
+        "specificity": 0.781,
+        "NPV": 0.954,
+        "PPV": 0.273,
+        "n_flagged": 450
+      },
+      {
+        "threshold": 0.4,
+        "sensitivity": 0.464,
+        "specificity": 0.887,
+        "NPV": 0.932,
+        "PPV": 0.331,
+        "n_flagged": 251
+      },
+      {
+        "threshold": 0.5,
+        "sensitivity": 0.263,
+        "specificity": 0.96,
+        "NPV": 0.916,
+        "PPV": 0.439,
+        "n_flagged": 107
+      },
+      {
+        "threshold": 0.6,
+        "sensitivity": 0.061,
+        "specificity": 0.991,
+        "NPV": 0.898,
+        "PPV": 0.44,
+        "n_flagged": 25
+      },
+      {
+        "threshold": 0.7,
+        "sensitivity": 0.006,
+        "specificity": 0.999,
+        "NPV": 0.893,
+        "PPV": 0.333,
+        "n_flagged": 3
+      }
+    ],
+    "test_n": 1670,
+    "test_pos": 179,
+    "always_negative_npv": 0.892814371257485
+  },
+  "confusion": [
+    {
+      "threshold": 0.1,
+      "tn": 640,
+      "fp": 851,
+      "fn": 10,
+      "tp": 169,
+      "n_skip": 650,
+      "skip_pct": 38.92215568862276,
+      "missed_positive_pct": 5.58659217877095
+    },
+    {
+      "threshold": 0.2,
+      "tn": 944,
+      "fp": 547,
+      "fn": 32,
+      "tp": 147,
+      "n_skip": 976,
+      "skip_pct": 58.44311377245509,
+      "missed_positive_pct": 17.877094972067038
+    },
+    {
+      "threshold": 0.3,
+      "tn": 1164,
+      "fp": 327,
+      "fn": 56,
+      "tp": 123,
+      "n_skip": 1220,
+      "skip_pct": 73.05389221556887,
+      "missed_positive_pct": 31.28491620111732
+    },
+    {
+      "threshold": 0.4,
+      "tn": 1323,
+      "fp": 168,
+      "fn": 96,
+      "tp": 83,
+      "n_skip": 1419,
+      "skip_pct": 84.97005988023952,
+      "missed_positive_pct": 53.63128491620112
+    },
+    {
+      "threshold": 0.5,
+      "tn": 1431,
+      "fp": 60,
+      "fn": 132,
+      "tp": 47,
+      "n_skip": 1563,
+      "skip_pct": 93.59281437125748,
+      "missed_positive_pct": 73.74301675977654
+    },
+    {
+      "threshold": 0.6,
+      "tn": 1477,
+      "fp": 14,
+      "fn": 168,
+      "tp": 11,
+      "n_skip": 1645,
+      "skip_pct": 98.50299401197606,
+      "missed_positive_pct": 93.85474860335195
+    },
+    {
+      "threshold": 0.7,
+      "tn": 1489,
+      "fp": 2,
+      "fn": 178,
+      "tp": 1,
+      "n_skip": 1667,
+      "skip_pct": 99.82035928143712,
+      "missed_positive_pct": 99.4413407821229
+    }
+  ],
+  "row_checks": {
+    "DEMO": {
+      "rows": 11933,
+      "unique_seqn": true,
+      "seqn_missing": 0
+    },
+    "CBC": {
+      "rows": 8727,
+      "unique_seqn": true,
+      "seqn_missing": 0
+    },
+    "GLU": {
+      "rows": 3996,
+      "unique_seqn": true,
+      "seqn_missing": 0
+    },
+    "GHB": {
+      "rows": 7199,
+      "unique_seqn": true,
+      "seqn_missing": 0
+    },
+    "DIQ": {
+      "rows": 11744,
+      "unique_seqn": true,
+      "seqn_missing": 0
+    }
+  },
+  "demo_status_counts": {
+    "2.0": 8860,
+    "1.0": 3073
+  },
+  "pregnancy_in_model": [
+    {
+      "RIDEXPRG": 1.0,
+      "count": 37,
+      "sum": 0
+    },
+    {
+      "RIDEXPRG": 2.0,
+      "count": 1000,
+      "sum": 37
+    },
+    {
+      "RIDEXPRG": 3.0,
+      "count": 21,
+      "sum": 1
+    },
+    {
+      "RIDEXPRG": null,
+      "count": 5620,
+      "sum": 679
+    }
+  ],
+  "glu_weights": {
+    "reader": "pyreadstat 1.2.6",
+    "measured": 3672,
+    "zero_weight_rows_in_file": 635,
+    "measured_with_zero_weight": 311,
+    "measured_positive_weight": 3361,
+    "positive_measured_zero_weight": 46,
+    "positive_measured_positive_weight": 384,
+    "measured_with_cbc_and_positive_weight": 3350
+  },
+  "weighted_target_prevalence": 0.0915172194676094,
+  "original_model_test_subsets": [
+    {
+      "group": "age_under18",
+      "n": 166,
+      "positive": 0,
+      "auc": null,
+      "tn": 162,
+      "fp": 4,
+      "fn": 0,
+      "tp": 0
+    },
+    {
+      "group": "adult18+",
+      "n": 1504,
+      "positive": 179,
+      "auc": 0.788464214187836,
+      "tn": 478,
+      "fp": 847,
+      "fn": 10,
+      "tp": 169
+    },
+    {
+      "group": "reported_no_diabetes",
+      "n": 1419,
+      "positive": 31,
+      "auc": 0.8149344612810263,
+      "tn": 626,
+      "fp": 762,
+      "fn": 1,
+      "tp": 30
+    },
+    {
+      "group": "known_diabetes",
+      "n": 201,
+      "positive": 143,
+      "auc": 0.5845189293465155,
+      "tn": 6,
+      "fp": 52,
+      "fn": 9,
+      "tp": 134
+    }
+  ],
+  "audit_demo_only_rf_auc": 0.732952650727456,
+  "biopro": {
+    "n_glucose": 6357,
+    "n_glucose_cbcwbc": 6331,
+    "n_glucose_complete_cbc12": 6321,
+    "serum_glucose_with_no_fasting_glucose": 2857,
+    "fastqx_cols": [
+      "SEQN",
+      "PHQ020",
+      "PHACOFHR",
+      "PHACOFMN",
+      "PHQ030",
+      "PHAALCHR",
+      "PHAALCMN",
+      "PHQ040",
+      "PHAGUMHR",
+      "PHAGUMMN",
+      "PHQ050",
+      "PHAANTHR",
+      "PHAANTMN",
+      "PHQ060",
+      "PHASUPHR",
+      "PHASUPMN",
+      "PHAFSTHR",
+      "PHAFSTMN",
+      "PHDSESNZ"
+    ]
+  },
+  "fixed_holdout_iid_bootstrap_2000": {
+    "auc_demo_lr": [
+      0.7098048970217381,
+      0.7757501472319082
+    ],
+    "auc_full_lr": [
+      0.747698372239778,
+      0.815824333754253
+    ],
+    "auc_full_rf": [
+      0.780261244821557,
+      0.8408852861248715
+    ],
+    "auc_demo_rf": [
+      0.7024993347730133,
+      0.7644358847725995
+    ],
+    "delta_lr": [
+      0.019046346824010654,
+      0.060703552166589216
+    ],
+    "delta_rf": [
+      0.051052019547175656,
+      0.1039969630976789
+    ],
+    "sensitivity_t01": [
+      0.9107117916999202,
+      0.9764774281805745
+    ],
+    "npv_t01": [
+      0.975,
+      0.993798449612403
+    ]
+  },
+  "brier": {
+    "demo_lr": 0.2110512355002529,
+    "full_lr": 0.19055165822092526,
+    "rf": 0.09412779463249057,
+    "constant_train_prevalence": 0.09569692853317956
+  },
+  "mean_predicted_risk": {
+    "demo_lr": 0.412828011210169,
+    "full_lr": 0.3780340193327161,
+    "rf": 0.19724050153331804
+  },
+  "raw_hashes": {
+    "CBC_L.xpt": "4405da2a5899dcd11e3ef4dbec0b4d2fca6d736a3efa7a85afee668baa95923f",
+    "GLU_L.xpt": "70f773ab37e3d8485341f32137e280e05b9279e5fe9b6f0362e4052d8fe9a201",
+    "DEMO_L.xpt": "ca4374a158b493b8b0163e1388da21d57a18d1b9cecff2aa4e2fa2bec494fe23",
+    "DIQ_L.xpt": "9535a023673ae869afae19d842d8679e06f6a464606ac15900686b41ef05090f",
+    "GHB_L.xpt": "67aee0353160e2392dc0a33bece99b90764a630c76d82415ac4639105ad9dd03"
+  },
+  "duplicate_component_identical": {
+    "CBC_L.xpt": true,
+    "GLU_L.xpt": true,
+    "GHB_L.xpt": true
+  },
+  "sas_zero_cross_reader_audit": {
+    "GLU_L": [
+      {
+        "col": "WTSAF2YR",
+        "n": 635,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      }
+    ],
+    "CBC_L": [
+      {
+        "col": "WTPH2YR",
+        "n": 1101,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "LBXEOPCT",
+        "n": 33,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "LBXBAPCT",
+        "n": 1,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "LBDEONO",
+        "n": 543,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "LBDBANO",
+        "n": 3870,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "LBXNRBC",
+        "n": 3040,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      }
+    ],
+    "GHB_L": [
+      {
+        "col": "WTPH2YR",
+        "n": 449,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      }
+    ],
+    "DEMO_L": [
+      {
+        "col": "RIDAGEYR",
+        "n": 189,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "RIDAGEMN",
+        "n": 17,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "RIDEXAGM",
+        "n": 4,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "WTMEC2YR",
+        "n": 3073,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      },
+      {
+        "col": "INDFMPIR",
+        "n": 100,
+        "pandas_values": [
+          5.397605346934028e-79
+        ],
+        "readstat_values": [
+          0.0
+        ]
+      }
+    ],
+    "DIQ_L": [],
+    "fasting_eligibility": {
+      "n_measured": 3672,
+      "n_zero_weight_measured": 311,
+      "n_valid_measured": 3361,
+      "n_valid_measured_cbc": 3350,
+      "n_invalid_measured_cbc": 307,
+      "n_valid_positive": 384,
+      "n_invalid_positive": 46
+    }
+  },
+  "audit_metadata": {
+    "date": "2026-10-15",
+    "reviewed_commit": "347c1b1",
+    "branch": "Hamid-midTermProposal",
+    "notebook_execution": "Sequential code-cell exec in fresh namespace per notebook; Agg plotting backend; cwd code/. Not a clean environment install or saved Jupyter rerun.",
+    "bootstrap_scope": "2000 IID resamples of fixed held-out predictions; seed 20261015; percentile intervals. No model refitting or NHANES complex survey design. Diagnostic only.",
+    "zero_weight_correction": "The first audit pass used pandas-decoded SAS zeros and unsafe exact comparisons. glu_weights has been replaced with independently checked pyreadstat results; do not use the initial temporary JSON for eligibility counts.",
+    "renderer": "Bundled LibreOffice 25.2-headless-codex.1 via render_docx.py",
+    "rendered_page_count": 10,
+    "title_pages": [
+      1
+    ],
+    "body_pages": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "reference_pages": [
+      9,
+      10
+    ],
+    "all_rendered_pages_visually_reviewed": true,
+    "live_remote_access_verified": false,
+    "reviewed_revision": "347c1b1 plus working-tree draft and MANUAL_TODO edits observed at final verification",
+    "originals_modified_by_this_review": false,
+    "concurrent_source_changes_preserved": [
+      "drafts/Midterm_Research_Plan_Draft.docx",
+      "MANUAL_TODO.md"
+    ],
+    "body_word_count_approx": 3302,
+    "table1_pages": [
+      5
+    ],
+    "figure1_pages": [
+      6
+    ],
+    "earlier_render_superseded": {
+      "total_pages": 11,
+      "body_pages": 8
+    },
+    "renderer_script_package": "documents/26.1013.11914"
+  },
+  "reviewed_source_hashes": {
+    "drafts/Midterm_Research_Plan_Draft.docx": "882a9460415339c9b5919f3e6f2266c85609fc51cfb640fb537bfe09955aade3",
+    "BMEN 600 Midterm Research Plan.dotx": "a10963adbc9157d666e559bf1177796cdb582bac6c4fc95df030c60f0397664a",
+    "code/01_eda_cbc_glucose_demographics.ipynb": "be5f9b2c5f0adc3af5b5ec8b1455652f629b403c8f98da83edb383fb805c4779",
+    "code/02_baseline_model_and_figures.ipynb": "9bf3bd8cf66acd60e457dd879c99e0486513063c8c038ee0661b61fd56b1050e",
+    "README.md": "0b1c10cd262d5b2762d39da4eae0bada0888ca3482e5e2a85c874cdcd68ba11e",
+    "MANUAL_TODO.md": "76577f14ccdcbba9a82a53d4de04adaba91466be849a2fbf2cf406f341499d61",
+    "literature_review/README.md": "d3655bdce4004ba08711a430535d337b3baddad8bfb6168022b8f35ac21b0bd5"
+  },
+  "roc_asset_sha256": "d273fa77d39a916f5f88ffac0f1b10f0ffeb6ec96ad0de4598b890f503df42f8",
+  "embedded_roc_matches_asset": true,
+  "rendered_pdf_sha256": "f2e341390aabf9ff31b4ba2e97c6b8b63fed7344e25ff37cf83092b8c989cd8e"
+}

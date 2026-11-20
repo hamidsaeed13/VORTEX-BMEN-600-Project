@@ -1,0 +1,523 @@
+--- a/code/04_feature_expansion.ipynb
++++ b/code/04_feature_expansion.ipynb
+@@ -2,23 +2,10 @@
+  "cells": [
+   {
+    "cell_type": "code",
+-   "execution_count": 1,
++   "execution_count": null,
+    "id": "578b397a",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loaded DEMO_L.xpt (11933, 27)\n",
+-      "Loaded CBC_L.xpt (8727, 23)\n",
+-      "Loaded GHB_L.xpt (7199, 3)\n",
+-      "Loaded DIQ_L.xpt (11744, 9)\n",
+-      "Cohort: 5144\n",
+-      "['AGP_L.xpt', 'ALB_CR_L.xpt', 'BCHE_L.xpt', 'BIOPRO_L.xpt', 'CBC_L.xpt', 'CBC_L.xpt', 'COT_L.xpt', 'DEMO_L.xpt', 'DIQ_L.xpt', 'FAR_L.xpt', 'FASTQX_L.xpt', 'FERTIN_L.xpt', 'FFMR_L.xpt', 'FOLATE_L.xpt', 'FOLFMS_L.xpt', 'GHB_L.xpt', 'GHB_L.xpt', 'GLU_L.xpt', 'GLU_L.xpt', 'HDL_L.xpt', 'HEPA_L.xpt', 'HEPBD_L.xpt', 'HEPB_S_L.xpt', 'HEPC_L.xpt', 'HEPE_L.xpt', 'HSCRP_L.xpt', 'IHGEM_L.xpt', 'INS_L.xpt', 'PBCD_L.xpt', 'PFAS_L.xpt', 'TCHOL_L.xpt', 'TFR_L.xpt', 'TRIGLY_L.xpt', 'TST_L.xpt', 'UCPREG_L.xpt', 'VID_L.xpt', 'VOCWB_L.xpt']\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "import os\n",
+     "import numpy as np\n",
+@@ -60,58 +47,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 2,
++   "execution_count": null,
+    "id": "cc75e1a7",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "AGP_L.xpt\n",
+-      "ALB_CR_L.xpt\n",
+-      "BCHE_L.xpt\n",
+-      "BIOPRO_L.xpt\n",
+-      "CBC_L.xpt\n",
+-      "CBC_L.xpt\n",
+-      "COT_L.xpt\n",
+-      "DEMO_L.xpt\n",
+-      "DIQ_L.xpt\n",
+-      "FAR_L.xpt\n",
+-      "FASTQX_L.xpt\n",
+-      "FERTIN_L.xpt\n",
+-      "FFMR_L.xpt\n",
+-      "FOLATE_L.xpt\n",
+-      "FOLFMS_L.xpt\n",
+-      "GHB_L.xpt\n",
+-      "GHB_L.xpt\n",
+-      "GLU_L.xpt\n",
+-      "GLU_L.xpt\n",
+-      "HDL_L.xpt\n",
+-      "HEPA_L.xpt\n",
+-      "HEPBD_L.xpt\n",
+-      "HEPB_S_L.xpt\n",
+-      "HEPC_L.xpt\n",
+-      "HEPE_L.xpt\n",
+-      "HSCRP_L.xpt\n",
+-      "IHGEM_L.xpt\n",
+-      "INS_L.xpt\n",
+-      "PBCD_L.xpt\n",
+-      "PFAS_L.xpt\n",
+-      "TCHOL_L.xpt\n",
+-      "TFR_L.xpt\n",
+-      "TRIGLY_L.xpt\n",
+-      "TST_L.xpt\n",
+-      "UCPREG_L.xpt\n",
+-      "VID_L.xpt\n",
+-      "VOCWB_L.xpt\n",
+-      "BMX_L NOT downloaded\n",
+-      "FERTIN_L available\n",
+-      "TFR_L available\n",
+-      "HSCRP_L available\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "files = sorted(f for _, _, fs in os.walk(DATA) for f in fs if f.upper().endswith(\".XPT\"))\n",
+     "for f in files:\n",
+@@ -123,28 +62,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 3,
++   "execution_count": null,
+    "id": "0b6f7314",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Saved to ../data\\raw\\examination\\BMX_L.xpt\n",
+-      "Loaded BMX_L.xpt (8860, 22)\n",
+-      "                SEQN       BMXBMI     BMXWAIST\n",
+-      "count    8860.000000  8471.000000  8190.000000\n",
+-      "mean   136345.828217    27.246665    92.120830\n",
+-      "std      3453.776310     8.137781    22.050484\n",
+-      "min    130378.000000    11.100000    39.800000\n",
+-      "25%    133319.750000    21.600000    77.500000\n",
+-      "50%    136377.500000    26.400000    92.700000\n",
+-      "75%    139336.250000    31.700000   107.000000\n",
+-      "max    142310.000000    74.800000   187.000000\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "import urllib.request\n",
+     "\n",
+@@ -153,7 +74,9 @@
+     "os.makedirs(folder, exist_ok=True)\n",
+     "path = os.path.join(folder, \"BMX_L.xpt\")\n",
+     "\n",
+-    "urllib.request.urlretrieve(url, path)\n",
++    "if not os.path.exists(path):\n",
++    "    urllib.request.urlretrieve(url, path)\n",
++    "# Still record/check the source URL and hash before treating this as a frozen input.\n",
+     "print(\"Saved to\", path)\n",
+     "\n",
+     "bmx = load(\"BMX_L\")\n",
+@@ -162,82 +85,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 4,
++   "execution_count": null,
+    "id": "dbccba24",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "CBC features: 21 | Missing BMI: 66\n"
+-     ]
+-    },
+-    {
+-     "data": {
+-      "text/html": [
+-       "<div>\n",
+-       "<style scoped>\n",
+-       "    .dataframe tbody tr th:only-of-type {\n",
+-       "        vertical-align: middle;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe tbody tr th {\n",
+-       "        vertical-align: top;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe thead th {\n",
+-       "        text-align: right;\n",
+-       "    }\n",
+-       "</style>\n",
+-       "<table border=\"1\" class=\"dataframe\">\n",
+-       "  <thead>\n",
+-       "    <tr style=\"text-align: right;\">\n",
+-       "      <th></th>\n",
+-       "      <th>Model</th>\n",
+-       "      <th>Features</th>\n",
+-       "      <th>AUROC (mean)</th>\n",
+-       "      <th>AUROC (SD)</th>\n",
+-       "    </tr>\n",
+-       "  </thead>\n",
+-       "  <tbody>\n",
+-       "    <tr>\n",
+-       "      <th>0</th>\n",
+-       "      <td>A: age + sex</td>\n",
+-       "      <td>2</td>\n",
+-       "      <td>0.697</td>\n",
+-       "      <td>0.012</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>1</th>\n",
+-       "      <td>B: age + sex + CBC</td>\n",
+-       "      <td>23</td>\n",
+-       "      <td>0.770</td>\n",
+-       "      <td>0.018</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>2</th>\n",
+-       "      <td>C: B + BMI + waist</td>\n",
+-       "      <td>25</td>\n",
+-       "      <td>0.780</td>\n",
+-       "      <td>0.014</td>\n",
+-       "    </tr>\n",
+-       "  </tbody>\n",
+-       "</table>\n",
+-       "</div>"
+-      ],
+-      "text/plain": [
+-       "                Model  Features  AUROC (mean)  AUROC (SD)\n",
+-       "0        A: age + sex         2         0.697       0.012\n",
+-       "1  B: age + sex + CBC        23         0.770       0.018\n",
+-       "2  C: B + BMI + waist        25         0.780       0.014"
+-      ]
+-     },
+-     "execution_count": 4,
+-     "metadata": {},
+-     "output_type": "execute_result"
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "from sklearn.pipeline import make_pipeline\n",
+     "from sklearn.impute import SimpleImputer\n",
+@@ -277,23 +128,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 5,
++   "execution_count": null,
+    "id": "d17852a1",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loaded FERTIN_L.xpt (2564, 4)\n",
+-      "Loaded TFR_L.xpt (2564, 4)\n",
+-      "Loaded HSCRP_L.xpt (8727, 4)\n",
+-      "FERTIN: columns ['LBXFER', 'LBDFERSI'] | in cohort with a value: 1240 of 5144\n",
+-      "TFR: columns ['LBXTFR', 'LBDTFRSI'] | in cohort with a value: 1240 of 5144\n",
+-      "HSCRP: columns ['LBXHSCRP', 'LBDHRPLC'] | in cohort with a value: 4990 of 5144\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "fer = load(\"FERTIN_L\")\n",
+     "tfr = load(\"TFR_L\")\n",
+@@ -308,19 +146,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 6,
++   "execution_count": null,
+    "id": "d40cd23f",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "D: B + hs-CRP   AUROC 0.781  (SD 0.018)   compare B = 0.770\n",
+-      "Iron subgroup: 1240 | sex (1=male, 2=female): {2.0: 1240} | age range: 18 - 49 | with HbA1c >= 5.7%: 181\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "data = (data\n",
+     "        .merge(crp[[\"SEQN\", \"LBXHSCRP\"]], on=\"SEQN\", how=\"left\")\n",
+@@ -341,24 +170,10 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 7,
++   "execution_count": null,
+    "id": "e9755492",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Anemic excluded: 473 | remaining: 4671\n",
+-      "  Non-anemic  A: age+sex       (np.float64(0.703), np.float64(0.019))\n",
+-      "  Non-anemic  B: age+sex+CBC   (np.float64(0.779), np.float64(0.017))\n",
+-      "Whole cohort  B without red-cell features: (np.float64(0.73), np.float64(0.014))\n",
+-      "Iron subgroup cases (HbA1c >= 5.7%): 181\n",
+-      "  Subgroup  B: age+sex+CBC         (np.float64(0.766), np.float64(0.021))\n",
+-      "  Subgroup  E: B + ferritin + TfR  (np.float64(0.77), np.float64(0.012))\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "def score_on(d, cols):\n",
+     "    yy = (d[\"LBXGH\"] >= 5.7).astype(int)\n",
+@@ -368,13 +183,14 @@
+     "# 1. Exclude anemic participants (WHO: Hb <13 g/dL men, <12 g/dL women)\n",
+     "data[\"anemic\"] = (((data[\"male\"] == 1) & (data[\"LBXHGB\"] < 13))\n",
+     "                  | ((data[\"male\"] == 0) & (data[\"LBXHGB\"] < 12)))\n",
+-    "na = data[~data[\"anemic\"]]\n",
++    "na = data[data[\"LBXHGB\"].notna() & ~data[\"anemic\"]].copy()\n",
++    "print(\"Missing hemoglobin excluded from low-HGB sensitivity:\", int(data[\"LBXHGB\"].isna().sum()))\n",
+     "print(\"Anemic excluded:\", int(data[\"anemic\"].sum()), \"| remaining:\", len(na))\n",
+     "print(\"  Non-anemic  A: age+sex      \", score_on(na, demo_cols))\n",
+     "print(\"  Non-anemic  B: age+sex+CBC  \", score_on(na, demo_cols + cbc_cols))\n",
+     "\n",
+     "# 2. CBC without red-cell features (white cells and platelets only)\n",
+-    "rbc = [\"LBXRBCSI\", \"LBXHGB\", \"LBXHCT\", \"LBXMCVSI\", \"LBXMCHSI\", \"LBXMC\", \"LBXRDW\"]\n",
++    "rbc = [\"LBXRBCSI\", \"LBXHGB\", \"LBXHCT\", \"LBXMCVSI\", \"LBXMCHSI\", \"LBXMC\", \"LBXRDW\", \"LBXNRBC\"]\n",
+     "no_rbc = [c for c in cbc_cols if c not in rbc]\n",
+     "print(\"Whole cohort  B without red-cell features:\", score_on(data, demo_cols + no_rbc))\n",
+     "\n",
+@@ -388,185 +204,39 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 8,
++   "execution_count": null,
+    "id": "f01eb431",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Features kept when red-cell measures removed: ['LBXWBCSI', 'LBXLYPCT', 'LBXMOPCT', 'LBXNEPCT', 'LBXEOPCT', 'LBXBAPCT', 'LBDLYMNO', 'LBDMONO', 'LBDNENO', 'LBDEONO', 'LBDBANO', 'LBXPLTSI', 'LBXMPSI', 'LBXNRBC']\n"
+-     ]
+-    },
+-    {
+-     "data": {
+-      "text/html": [
+-       "<div>\n",
+-       "<style scoped>\n",
+-       "    .dataframe tbody tr th:only-of-type {\n",
+-       "        vertical-align: middle;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe tbody tr th {\n",
+-       "        vertical-align: top;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe thead th {\n",
+-       "        text-align: right;\n",
+-       "    }\n",
+-       "</style>\n",
+-       "<table border=\"1\" class=\"dataframe\">\n",
+-       "  <thead>\n",
+-       "    <tr style=\"text-align: right;\">\n",
+-       "      <th></th>\n",
+-       "      <th>Population</th>\n",
+-       "      <th>Model</th>\n",
+-       "      <th>AUROC (mean)</th>\n",
+-       "      <th>AUROC (SD)</th>\n",
+-       "    </tr>\n",
+-       "  </thead>\n",
+-       "  <tbody>\n",
+-       "    <tr>\n",
+-       "      <th>0</th>\n",
+-       "      <td>Whole cohort</td>\n",
+-       "      <td>A: age + sex</td>\n",
+-       "      <td>0.697</td>\n",
+-       "      <td>0.012</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>1</th>\n",
+-       "      <td>Whole cohort</td>\n",
+-       "      <td>B: + CBC</td>\n",
+-       "      <td>0.770</td>\n",
+-       "      <td>0.018</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>2</th>\n",
+-       "      <td>Whole cohort</td>\n",
+-       "      <td>C: B + BMI + waist</td>\n",
+-       "      <td>0.780</td>\n",
+-       "      <td>0.014</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>3</th>\n",
+-       "      <td>Whole cohort</td>\n",
+-       "      <td>D: B + hs-CRP</td>\n",
+-       "      <td>0.781</td>\n",
+-       "      <td>0.018</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>4</th>\n",
+-       "      <td>Whole cohort</td>\n",
+-       "      <td>B without red-cell features</td>\n",
+-       "      <td>0.730</td>\n",
+-       "      <td>0.014</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>5</th>\n",
+-       "      <td>Non-anemic (n=4,671)</td>\n",
+-       "      <td>A: age + sex</td>\n",
+-       "      <td>0.703</td>\n",
+-       "      <td>0.019</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>6</th>\n",
+-       "      <td>Non-anemic (n=4,671)</td>\n",
+-       "      <td>B: + CBC</td>\n",
+-       "      <td>0.779</td>\n",
+-       "      <td>0.017</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>7</th>\n",
+-       "      <td>Iron subgroup, women 18-49 (n=1,240)</td>\n",
+-       "      <td>B: age + sex + CBC</td>\n",
+-       "      <td>0.766</td>\n",
+-       "      <td>0.021</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>8</th>\n",
+-       "      <td>Iron subgroup, women 18-49 (n=1,240)</td>\n",
+-       "      <td>E: B + ferritin + TfR</td>\n",
+-       "      <td>0.770</td>\n",
+-       "      <td>0.012</td>\n",
+-       "    </tr>\n",
+-       "  </tbody>\n",
+-       "</table>\n",
+-       "</div>"
+-      ],
+-      "text/plain": [
+-       "                             Population                        Model  \\\n",
+-       "0                          Whole cohort                 A: age + sex   \n",
+-       "1                          Whole cohort                     B: + CBC   \n",
+-       "2                          Whole cohort           C: B + BMI + waist   \n",
+-       "3                          Whole cohort                D: B + hs-CRP   \n",
+-       "4                          Whole cohort  B without red-cell features   \n",
+-       "5                  Non-anemic (n=4,671)                 A: age + sex   \n",
+-       "6                  Non-anemic (n=4,671)                     B: + CBC   \n",
+-       "7  Iron subgroup, women 18-49 (n=1,240)           B: age + sex + CBC   \n",
+-       "8  Iron subgroup, women 18-49 (n=1,240)        E: B + ferritin + TfR   \n",
+-       "\n",
+-       "   AUROC (mean)  AUROC (SD)  \n",
+-       "0         0.697       0.012  \n",
+-       "1         0.770       0.018  \n",
+-       "2         0.780       0.014  \n",
+-       "3         0.781       0.018  \n",
+-       "4         0.730       0.014  \n",
+-       "5         0.703       0.019  \n",
+-       "6         0.779       0.017  \n",
+-       "7         0.766       0.021  \n",
+-       "8         0.770       0.012  "
+-      ]
+-     },
+-     "execution_count": 8,
+-     "metadata": {},
+-     "output_type": "execute_result"
+-    }
+-   ],
+-   "source": [
+-    "print(\"Features kept when red-cell measures removed:\", no_rbc)\n",
+-    "\n",
+-    "summary = pd.DataFrame([\n",
+-    "    [\"Whole cohort\", \"A: age + sex\", 0.697, 0.012],\n",
+-    "    [\"Whole cohort\", \"B: + CBC\", 0.770, 0.018],\n",
+-    "    [\"Whole cohort\", \"C: B + BMI + waist\", 0.780, 0.014],\n",
+-    "    [\"Whole cohort\", \"D: B + hs-CRP\", 0.781, 0.018],\n",
+-    "    [\"Whole cohort\", \"B without red-cell features\", 0.730, 0.014],\n",
+-    "    [\"Non-anemic (n=4,671)\", \"A: age + sex\", 0.703, 0.019],\n",
+-    "    [\"Non-anemic (n=4,671)\", \"B: + CBC\", 0.779, 0.017],\n",
+-    "    [\"Iron subgroup, women 18-49 (n=1,240)\", \"B: age + sex + CBC\", 0.766, 0.021],\n",
+-    "    [\"Iron subgroup, women 18-49 (n=1,240)\", \"E: B + ferritin + TfR\", 0.770, 0.012],\n",
+-    "], columns=[\"Population\", \"Model\", \"AUROC (mean)\", \"AUROC (SD)\"])\n",
+-    "summary"
+-   ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": 9,
++   "outputs": [],
++   "source": [
++    "# Generate the summary from the current data and current model fits.\n",
++    "comparisons = [\n",
++    "    (\"Whole cohort\", data, \"A: age + sex\", demo_cols),\n",
++    "    (\"Whole cohort\", data, \"B: + CBC\", demo_cols + cbc_cols),\n",
++    "    (\"Whole cohort\", data, \"C: B + BMI + waist\", demo_cols + cbc_cols + [\"BMXBMI\", \"BMXWAIST\"]),\n",
++    "    (\"Whole cohort\", data, \"D: B + hs-CRP\", demo_cols + cbc_cols + [\"log_crp\"]),\n",
++    "    (\"Whole cohort\", data, \"B without red-cell features\", demo_cols + no_rbc),\n",
++    "    (\"Observed HGB, not low by operational cutoff\", na, \"A: age + sex\", demo_cols),\n",
++    "    (\"Observed HGB, not low by operational cutoff\", na, \"B: + CBC\", demo_cols + cbc_cols),\n",
++    "    (\"Observed ferritin subgroup\", sub, \"B: age + sex + CBC\", demo_cols + cbc_cols),\n",
++    "    (\"Observed ferritin subgroup\", sub, \"E: B + ferritin + TfR\", demo_cols + cbc_cols + [\"log_fer\", \"LBXTFR\"]),\n",
++    "]\n",
++    "summary_rows = []\n",
++    "for population, frame, name, columns in comparisons:\n",
++    "    mean_auc, sd_auc = score_on(frame, columns)\n",
++    "    summary_rows.append({\"Population\": population, \"n\": len(frame),\n",
++    "                         \"Positive labels\": int(frame[\"LBXGH\"].ge(5.7).sum()),\n",
++    "                         \"Model\": name, \"AUROC (mean)\": mean_auc, \"AUROC (SD)\": sd_auc})\n",
++    "summary = pd.DataFrame(summary_rows)\n",
++    "summary\n"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
+    "id": "603d68c6",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "LBXWBCSI\n",
+-      "LBXLYPCT\n",
+-      "LBXMOPCT\n",
+-      "LBXNEPCT\n",
+-      "LBXEOPCT\n",
+-      "LBXBAPCT\n",
+-      "LBDLYMNO\n",
+-      "LBDMONO\n",
+-      "LBDNENO\n",
+-      "LBDEONO\n",
+-      "LBDBANO\n",
+-      "LBXPLTSI\n",
+-      "LBXMPSI\n",
+-      "LBXNRBC\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+     "for c in no_rbc:\n",
+     "    print(c)"
