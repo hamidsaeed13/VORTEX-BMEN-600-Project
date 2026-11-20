@@ -1,0 +1,29 @@
+model,threshold,sensitivity,specificity,NPV,PPV,n_flagged,n_deferred,positives_missed
+Age only (logistic),0.1,1.0,0.072,1.0,0.115,1563,107,0
+Age only (logistic),0.2,0.989,0.271,0.995,0.14,1264,406,2
+Age only (logistic),0.3,0.933,0.408,0.981,0.159,1050,620,12
+Age only (logistic),0.4,0.832,0.499,0.961,0.166,896,774,30
+Age only (logistic),0.5,0.732,0.573,0.947,0.171,768,902,48
+Age only (logistic),0.6,0.441,0.708,0.913,0.154,514,1156,100
+Age only (logistic),0.7,0.263,0.857,0.906,0.181,260,1410,132
+Demographics only (logistic),0.1,1.0,0.152,1.0,0.124,1444,226,0
+Demographics only (logistic),0.2,0.983,0.304,0.993,0.145,1214,456,3
+Demographics only (logistic),0.3,0.922,0.435,0.979,0.164,1008,662,14
+Demographics only (logistic),0.4,0.838,0.529,0.965,0.176,853,817,29
+Demographics only (logistic),0.5,0.687,0.644,0.945,0.188,654,1016,56
+Demographics only (logistic),0.6,0.547,0.743,0.932,0.204,481,1189,81
+Demographics only (logistic),0.7,0.363,0.855,0.918,0.231,281,1389,114
+CBC + demographics (logistic),0.1,0.989,0.245,0.995,0.136,1303,367,2
+CBC + demographics (logistic),0.2,0.95,0.396,0.985,0.159,1071,599,9
+CBC + demographics (logistic),0.3,0.872,0.499,0.97,0.173,903,767,23
+CBC + demographics (logistic),0.4,0.782,0.592,0.958,0.187,748,922,39
+CBC + demographics (logistic),0.5,0.721,0.7,0.954,0.224,576,1094,50
+CBC + demographics (logistic),0.6,0.598,0.79,0.942,0.255,420,1250,72
+CBC + demographics (logistic),0.7,0.497,0.871,0.935,0.316,282,1388,90
+CBC + demographics (random forest),0.1,0.944,0.429,0.985,0.166,1020,650,10
+CBC + demographics (random forest),0.2,0.821,0.633,0.967,0.212,694,976,32
+CBC + demographics (random forest),0.3,0.687,0.781,0.954,0.273,450,1220,56
+CBC + demographics (random forest),0.4,0.464,0.887,0.932,0.331,251,1419,96
+CBC + demographics (random forest),0.5,0.263,0.96,0.916,0.439,107,1563,132
+CBC + demographics (random forest),0.6,0.061,0.991,0.898,0.44,25,1645,168
+CBC + demographics (random forest),0.7,0.006,0.999,0.893,0.333,3,1667,178

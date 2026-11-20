@@ -1,0 +1,15 @@
+{
+  "n": 4612,
+  "positives": 106,
+  "weighted_prevalence": 0.019881436273137577,
+  "strata": 15,
+  "psus": 30,
+  "design_df": 15,
+  "outer_folds": 5,
+  "inner_folds": 3,
+  "seed": 42,
+  "sensitivity_goal": 0.95,
+  "jackknife_scope": "fixed outer predictions and learned thresholds; no model refitting",
+  "preprocessing": "unweighted training-fold imputation/scaling; survey-weighted classifier and calibrator",
+  "class_weight": null
+}
