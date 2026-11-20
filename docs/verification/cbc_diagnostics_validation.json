@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "participants": 4612,
+  "positives": 106,
+  "fit_audits": 40,
+  "checks": [
+    "saved raw-CBC prediction reproduction",
+    "matched subjects and folds",
+    "PSU separation for all inner and outer fits",
+    "training-only PCA sample counts",
+    "finite unique predictions",
+    "PCA projections match independent einsum contraction"
+  ],
+  "protocol_sha256": "96189c2d9862a2e9c76e9ead9b4b35c887387a5f28945a290eef73f9985f86b9"
+}

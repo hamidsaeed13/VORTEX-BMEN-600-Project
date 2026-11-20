@@ -1,5 +1,11 @@
 # Things only you (or the team) can do
 
+**Current status — 2026-11-16:** The text below is a historical midterm checklist. Its claims about nothing being pushed, the active branch, the October submission deadline, and missing implementation are stale. Use [PROJECT_PLAN.md](PROJECT_PLAN.md) and [CHECKLIST_AUDIT.md](CHECKLIST_AUDIT.md) for current research status and teammate contributions. Current work is on `organize-project`; PRs 11–12 merged into their parent branches, while PR 10 to `main` is still open as checked on GitHub. Team scope/endpoint agreement, contribution statements, original access date, literature gaps and independent review remain unresolved. New diagnostics are documented separately; do not read old unchecked boxes as proof that the code is absent.
+
+---
+
+## Historical midterm record
+
 Running list, updated as I keep working on the Midterm Research Plan. Nothing has been pushed —
 there is a local commit (`347c1b1`) from earlier, plus further uncommitted changes from this pass,
 all still on branch `Hamid-midTermProposal`.

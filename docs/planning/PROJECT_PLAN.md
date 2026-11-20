@@ -4,6 +4,8 @@ Start-to-end research/technical plan for predicting diabetes-range HbA1c from CB
 Course logistics (assignments, grading, submission, peer evaluation, presentations) are
 intentionally excluded — this tracks the research project itself.
 
+Checkboxes were reconciled against this checkout on 2026-11-16; see [evidence and teammate contributions](CHECKLIST_AUDIT.md). Completion refers to implementation here, not team approval or merge into main.
+
 Checkboxes reflect status as of this writing. `[x]` = done, `[~]` = in progress / partially done,
 `[ ]` = not started. Re-check this list as work lands rather than trusting it blindly — it's a
 snapshot.
@@ -22,7 +24,7 @@ including negative results; original tasks and team decisions below remain for r
       `DIQ_L` (`data/raw/`)
 - [x] Merge all five on `SEQN` (`notebooks/01_eda_cbc_glucose_demographics.ipynb`)
 - [ ] Record the real dataset access/download date
-- [ ] Fix `pd.read_sas` SAS-zero bug (zeros read as ~5.4e-79) — use `pyreadstat` or explicitly
+- [x] Fix `pd.read_sas` SAS-zero bug (zeros read as ~5.4e-79) — use `pyreadstat` or explicitly
       snap near-zero values before any weight-based filtering
 
 ## Phase 2 — Exploratory data analysis
@@ -41,9 +43,9 @@ team population/endpoint decisions remain open. See [cohort analysis](../finding
 
 - [ ] Decide and document the intended population: age range (12+? adults only?), known-diagnosis
       policy (include/exclude/stratify), pregnancy exclusion
-- [ ] Apply `WTSAF2YR > 0` eligibility filter for any fasting-glucose analysis (not currently
-      applied — current "measured" counts include ineligible zero-weight records)
-- [ ] Recompute cohort counts, class balance, and the "78.8% already diagnosed" caveat once
+- [x] Apply `WTSAF2YR > 0` eligibility filter for fasting-glucose analysis
+      (`research_extension.py`; matched fasting-endpoint results)
+- [x] Recompute cohort counts, class balance, and the "78.8% already diagnosed" caveat once
       eligibility is applied — do not reuse the current exploratory numbers unchanged
 - [ ] Finalize the primary target label (currently HbA1c ≥6.5%, exploratory) and document the
       clinical justification; keep fasting glucose as the secondary check
@@ -56,9 +58,10 @@ team population/endpoint decisions remain open. See [cohort analysis](../finding
       7/9)
 - [ ] Add a short cohort-flow description distinguishing interview-only (`n=3,073`) vs. examined
       (`n=8,860`) participants, and age-ineligibility vs. true item nonresponse
-- [ ] Decide missing-data strategy per variable type (see Phase 5) and justify it
-- [ ] Add merge-validation assertions (unique `SEQN`, expected row counts, expected label
-      availability) so a broken merge fails loudly instead of silently
+- [~] Missing-data strategy is implemented (observed outcome/complete CBC eligibility; fold-specific imputation for remaining predictors). Reconcile documentation and selection assumptions with PR 15.
+- [~] Add merge-validation assertions: unique `SEQN`, one-to-one joins, unchanged merged row
+      count and primary cohort/event counts are checked; complete source/category auditing
+      remains to reconcile with PR 15
 
 ## Phase 5 — Missing data handling
 
@@ -66,55 +69,59 @@ team population/endpoint decisions remain open. See [cohort analysis](../finding
 
 - [x] Baseline: median-impute numeric CBC/age/income; most-frequent-impute categorical
       demographics
-- [ ] Move imputers inside the `ColumnTransformer`/pipeline so they refit per CV fold (not fit
+- [x] Move imputers inside the `ColumnTransformer`/pipeline so they refit per CV fold (not fit
       once on the full sample)
-- [ ] Consider a missingness indicator for `education`/`income_pir`, since missingness there is
-      structural (e.g. adult education is undefined under age 20), not random
+- [~] Numeric missingness indicators, including income, are implemented in the extension.
+      Education is mode-imputed (two missing values in the adult cohort); no separate
+      education indicator. Adult eligibility removes the under-20 structural category.
 
 ## Phase 6 — Encoding categorical variables
 
 **Progress:** Notebooks 03–04 one-hot encode sex, race/ethnicity and education inside training
 folds, retaining all levels; notebook 02 retains its original exploratory encoding.
 
-- [ ] `sex` (`RIAGENDR`): explicit `OneHotEncoder(drop="if_binary")` instead of raw int
-- [ ] `race_eth` (`RIDRETH3`): `OneHotEncoder(handle_unknown="ignore")` — nominal, nothing ordinal
+- [x] `sex` (`RIAGENDR`): one-hot encode inside folds; retain all levels with penalized logistic regression rather than require a dropped binary level
+- [x] `race_eth` (`RIDRETH3`): `OneHotEncoder(handle_unknown="ignore")` — nominal, nothing ordinal
       about it
-- [ ] `education` (`DMDEDUC2`): decide ordinal (`OrdinalEncoder` with an explicit category order)
-      vs. one-hot, and justify the choice — currently passed as raw numeric codes to both logistic
-      regression and random forest, which is a real correctness bug
-- [ ] Fit every encoder inside the training fold only, with `handle_unknown="ignore"` so an unseen
+- [x] `education` (`DMDEDUC2`): one-hot encode in notebooks 03–06 to allow separate category
+      effects without assuming equally spaced ordered effects. The historical notebook 02
+      encoding is retained as an exploratory baseline, not the final pipeline.
+- [x] Fit every encoder inside the training fold only, with `handle_unknown="ignore"` so an unseen
       category in held-out data doesn't break the pipeline
 
 ## Phase 7 — Collinearity check / PCA (diagnostic, not a replacement for raw features)
 
-- [ ] Compute correlation matrix + VIF on the numeric CBC block before deciding anything further
+**2026-11-16:** Implemented in [cbc_diagnostics.py](../../scripts/analysis/cbc_diagnostics.py), with [findings](../findings/cbc_diagnostics.md), VIF/correlation tables, descriptive scree/PC1–PC2 figure, and a matched nested 95%-variance PCA comparison. All preprocessing is fitted inside each training fold; basophil percentage is dropped. High VIF persists after that drop. MCH/MCHC are not in our predictor block.
+
+- [x] Compute correlation matrix + VIF on the numeric CBC block before deciding anything further
       (already have a correlation heatmap; extend to VIF)
-- [ ] Address the WBC 5-part differential being compositional data (`lymph_pct + neut_pct +
+- [x] Address the WBC 5-part differential being compositional data (`lymph_pct + neut_pct +
       mono_pct + eos_pct + baso_pct ≈ 100%`) — drop one category or use a log-ratio transform
       before PCA/linear models
-- [ ] Note the algebraic relationships among `hemoglobin`/`hematocrit`/`mcv`/`mch`/`mchc`
-- [ ] Run PCA (after scaling, after resolving the compositional issue) as:
-  - [ ] a 2D/3D PC1-vs-PC2 scatter colored by HbA1c status
-  - [ ] an optional secondary model arm (compressed CBC representation vs. raw features) as a
+- [x] Note the algebraic relationships among `hemoglobin`/`hematocrit`/`mcv`/`mch`/`mchc`
+- [x] Run PCA (after scaling, after resolving the compositional issue) as:
+  - [x] a 2D/3D PC1-vs-PC2 scatter colored by HbA1c status
+  - [x] an optional secondary model arm (compressed CBC representation vs. raw features) as a
         robustness check — not the primary/headline model, to preserve interpretability for the
         eventual order/skip policy
-  - [ ] choose `n_components` via scree-plot elbow or ~90–95% explained variance; fit only inside
+  - [x] choose `n_components` via scree-plot elbow or ~90–95% explained variance; fit only inside
         the training fold of each CV split
 
 ## Phase 8 — Survey design (NHANES-specific)
 
 **Progress:** Notebook 04 uses WTPH2YR in classifiers, calibration and evaluation, with
-SDMVSTRA/SDMVPSU for grouped validation and conditional variance estimates. Notebook 03
-(`survey_design.ipynb`, see [survey design decisions](../survey_design.md)) independently
-confirms the same weight/design-variable choices on a separate analytic cohort (5,144 adults,
-not restricted to age 20+) and additionally finds only 152 participants (2.5% weighted) reach
-HbA1c >= 6.5%, which argues for HbA1c >= 5.7% as the primary outcome. The weighted-calibration
-work in notebook 04 targets >= 6.5% on a 20+ cohort instead, so the primary-outcome choice is
-still an open team decision, not just an implementation detail. Fasting-glucose weighting
-(WTSAF2YR) remains open.
+SDMVSTRA/SDMVPSU for grouped validation and conditional variance estimates. Fasting-glucose
+eligibility and weighting are implemented in notebook 05. See [weighted analysis](../findings/weighted_calibration_analysis.md).
+Notebook 03 (`survey_design.ipynb`, see [survey design decisions](../survey_design.md))
+independently confirms the same weight/design-variable choices on a separate analytic cohort
+(5,144 adults, not restricted to age 20+) and finds only 152 participants (2.5% weighted) reach
+HbA1c >= 6.5%, arguing for HbA1c >= 5.7% as the primary outcome; the weighted-calibration work
+in notebook 04 targets >= 6.5% on a 20+ cohort instead. This primary-outcome/cohort choice is
+still an open team decision, not just an implementation detail -- see
+[checklist audit](CHECKLIST_AUDIT.md) and [team review](../reviews/TEAM_REVIEW.md), which track
+this same disagreement across PRs 13-15.
 
-- [x] Apply `WTPH2YR` for CBC/HbA1c analyses
-- [ ] Apply `WTSAF2YR` (with eligibility) for fasting glucose
+- [x] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
 - [x] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
 - [x] State explicitly whether reported performance targets the analytic sample or a
       population-level estimate; keep class-balancing weights conceptually separate from survey
@@ -122,7 +129,7 @@ still an open team decision, not just an implementation detail. Fasting-glucose 
 
 ## Phase 9 — Explore other relevant factors (feature expansion)
 
-The current model only uses the CBC panel + 5 demographic variables (`age_years`, `sex`,
+The original baseline only used the CBC panel + 5 demographic variables (`age_years`, `sex`,
 `race_eth`, `education`, `income_pir`). Several other NHANES-measured factors are plausible
 predictors of diabetes-range HbA1c and are either already sitting unused in this repo or are a
 cheap additional download. Each one needs its own task: pull the variable(s), check coverage/
@@ -159,10 +166,9 @@ demographics-only).
 
 ### Not yet downloaded — worth acquiring
 
-- [ ] **Body Measures** (`BMX_L`, Examination component) — **BMI, waist circumference, weight,
+- [x] **Body Measures** (`BMX_L`, Examination component) — **BMI, waist circumference, weight,
       height.** This is the single biggest gap: the closest published precedent (Guo et al.,
-      already cited) uses age, BMI, sex, NLR, and PLR as predictors, and BMI is missing entirely
-      from the current feature set
+      already cited) uses age, BMI, sex, NLR, and PLR as predictors, and BMI is now included in the matched extension models
 - [ ] **Blood Pressure** (`BPXO_L`, Examination component) — hypertension correlates strongly with
       diabetes/metabolic syndrome risk
 - [ ] **Smoking Questionnaire** (`SMQ_L`) — self-reported smoking status/pack-years, complementary
@@ -179,7 +185,7 @@ demographics-only).
 
 ### How to evaluate each addition
 
-- [ ] For each new variable group, repeat the existing ablation pattern: fit CBC+demographics
+- [~] BMI and CBC blocks are evaluated on matched participants/folds. For each further new variable group, repeat the existing ablation pattern: fit CBC+demographics
       alone vs. CBC+demographics+[new variables], same split/settings, compare AUROC and the
       sensitivity/NPV threshold table — don't just add everything into one giant model at once
 - [ ] Track coverage overlap with the current modeling cohort — several of these (`FERTIN_L`,
@@ -191,48 +197,48 @@ demographics-only).
 
 **Progress:** Age-only comparisons are in notebooks 02–04. Notebook 04 adds nested
 cluster-grouped validation with development-only calibration/threshold selection; further
-model comparisons and independent final validation remain open.
+model comparisons remain open; notebook 06 adds frozen older-cycle evaluation.
 
 - [x] Baseline logistic regression (demographics-only and CBC+demographics)
 - [x] Baseline random forest (CBC+demographics), `class_weight="balanced"`
-- [x] Single stratified train/test split, ROC curves, AUROC comparison
-- [ ] Add a simple age-only baseline for comparison
+- [x] Single stratified train/test split, ROC curves, AUROC comparison (historical baseline; nested validation supersedes it)
+- [x] Add a simple age-only baseline for comparison
 - [ ] Add a matched demographics-only random forest (same split/settings) alongside the existing
       logistic-regression ablation
 - [ ] Add gradient boosting
-- [ ] Replace the single train/test split with stratified k-fold (or repeated stratified k-fold)
+- [x] Replace the single train/test split with stratified k-fold (or repeated stratified k-fold)
       cross-validation, with the full pipeline (impute → encode → scale → [PCA] → classifier)
       refit per fold
-- [ ] Development-only threshold/model selection; reserve an untouched holdout (or nested CV) for
+- [x] Development-only threshold/model selection; reserve an untouched holdout (or nested CV) for
       final reporting — the current test set has already been inspected across models/thresholds
 
 ## Phase 11 — Evaluation
 
 **Progress:** Notebooks 02–04 report deferred/flagged/missed counts. Notebook 04 adds weighted
 calibration diagnostics and conditional design intervals, which exclude training variability;
-full-procedure uncertainty and HbA1c/fasting-glucose sensitivity remain open.
+notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitivity.
 
 - [x] First-pass threshold table (sensitivity/specificity/NPV/PPV across thresholds)
-- [ ] Report tests flagged, tests deferred, and positive labels missed together at every
+- [x] Report tests flagged, tests deferred, and positive labels missed together at every
       threshold — never NPV alone (a predict-all-negative rule already gets 89.3% NPV)
-- [ ] Add calibration checks: reliability plot, proper scoring rule (Brier score vs. constant
+- [x] Add calibration checks: reliability plot, proper scoring rule (Brier score vs. constant
       baseline is not sufficient on its own); fit any calibrator within development data only
-- [ ] Add confidence intervals / design-aware uncertainty (plain bootstrap on a fixed split
+- [x] Add confidence intervals / design-aware uncertainty (plain bootstrap on a fixed split
       ignores NHANES clustering/stratification)
 - [ ] Use held-out permutation importance instead of impurity-based importance if feature
       interpretation claims are made
-- [ ] Subgroup/sensitivity analysis: compare HbA1c-based and fasting-glucose-based results to
+- [x] Subgroup/sensitivity analysis: compare HbA1c-based and fasting-glucose-based results to
       check sensitivity to HbA1c-related measurement effects (e.g. anemia)
 - [ ] Add `savefig` calls in the notebooks so `results/baseline/*.png` regenerate automatically instead
       of relying on manual export
 
 ## Phase 12 — Translate into a recommendation policy
 
-- [ ] Define the decision policy itself (order / consider / skip) at a chosen high-sensitivity
+- [~] Development-only 95%-sensitivity thresholds and exploratory policy counts are implemented; team justification remains open. Define the decision policy itself (order / consider / skip) at a chosen high-sensitivity
       operating point, justified as a research objective, not an approved clinical safety standard
-- [ ] Frame the cost-benefit explicitly as a hypothesis (NHANES has no cost or ordering-policy
+- [x] Frame the cost-benefit explicitly as a hypothesis (NHANES has no cost or ordering-policy
       data) rather than an established economic claim
-- [ ] State clearly that cross-sectional NHANES cannot validate the counterfactual harm of
+- [x] State clearly that cross-sectional NHANES cannot validate the counterfactual harm of
       withholding a test
 
 ## Phase 13 — Literature review
@@ -240,12 +246,14 @@ full-procedure uncertainty and HbA1c/fasting-glucose sensitivity remain open.
 - [x] 18 sources collected, 3 rounds of fact-checking completed, 15/18 verified against full text
 - [ ] Resolve the 3 remaining sources (Veeranna, Engström, Bang) — full text blocked by
       Cloudflare/WAF; currently cited at abstract/title level only
-- [ ] If any new feature groups from Phase 9 are added (lipids, insulin/HOMA-IR, inflammation,
+- [~] BMI and red-cell literature are covered in the extension evidence matrix. If further new feature groups from Phase 9 are added (lipids, insulin/HOMA-IR, inflammation,
       BMI), add matching literature coverage for each
 
 ## Phase 14 — Technical cleanup
 
-- [ ] Add a dependency/environment file (Python 3.9.6, pandas 2.3.3, NumPy 2.0.2,
+- [x] Add a dependency/environment file (Python 3.9.6, pandas 2.3.3, NumPy 2.0.2,
       scikit-learn 1.6.1, SciPy 1.13.1 were used successfully)
 - [ ] Update stale statements in notebook 01 ("modeling packages not installed", "future notebook
       02") now that notebook 02 exists
+
+**2026-11-16 reconciliation:** Phase 4 cleaning is also addressed in Setayesh PR 15; Phase 8 and selected Phase 9 blocks in Ella PRs 13–14. Those branches use different eligibility/outcomes and are pending integration, so their tasks are not automatically marked complete here. See CHECKLIST_AUDIT.md. Phase 12 has an exploratory threshold procedure, but team justification and a final policy remain open. Phase 9 is a candidate menu, not a requirement to add every measured biomarker.

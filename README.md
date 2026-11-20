@@ -56,12 +56,24 @@ for previous locations and the [script guide](scripts/README.md) for commands.
 </details>
 
 <details>
+<summary>07 — CBC collinearity and PCA supplement</summary>
+
+- [Analysis script](scripts/analysis/cbc_diagnostics.py)
+- [Specification](docs/methods/phase7_analysis_protocol.md)
+- [Findings](docs/findings/cbc_diagnostics.md)
+- [Outputs](results/cbc_diagnostics/)
+
+</details>
+
+<details>
 <summary>Literature, writing and project management</summary>
 
 - [Literature evidence and source notes](literature/README.md)
 - [Draft writing](writing/drafts/)
 - [Presentations](writing/presentations/)
 - [Project plan](docs/planning/PROJECT_PLAN.md)
+- [Checklist audit and teammate contributions](docs/planning/CHECKLIST_AUDIT.md)
+- [Team contribution review — Ella and Setayesh](docs/reviews/TEAM_REVIEW.md) ([tabbed HTML](docs/reviews/TEAM_REVIEW.html))
 - [Manual TODO](docs/planning/MANUAL_TODO.md)
 - [Methods, findings, verification and course documents](docs/README.md)
 - [Publication readiness](docs/findings/publication_readiness.md)
