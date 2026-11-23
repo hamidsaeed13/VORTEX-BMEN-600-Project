@@ -11,11 +11,11 @@ All primary comparisons within a sample use identical participants and splits.
 
 | Predictors | Current-cycle OOF AUROC | Independent-cycle AUROC | Current Brier | Independent Brier |
 | --- | --- | --- | --- | --- |
-| demographics | 0.693 | 0.664 | 0.01932 | 0.02004 |
-| demographics_bmi | 0.799 | 0.762 | 0.01926 | 0.01987 |
-| demographics_bmi_cbc | 0.823 | 0.799 | 0.01902 | 0.02059 |
+| demographics | 0.697 | 0.668 | 0.01932 | 0.02005 |
+| demographics_bmi | 0.801 | 0.760 | 0.01921 | 0.01992 |
+| demographics_bmi_cbc | 0.811 | 0.790 | 0.01902 | 0.02062 |
 
-The incremental CBC AUROC gain after BMI is **0.023**. This is smaller than the earlier
+The incremental CBC AUROC gain after BMI is **0.010**. This is smaller than the earlier
 comparison against demographics without BMI. It is not a direct update of notebook 04's
 numbers: the new specification also adds numeric missingness indicators and removes basophil
 percentage from predictors to remove the differential-composition dependency. Models are
@@ -23,7 +23,7 @@ regularized, not interpreted as causal effects; other red-cell collinearity rema
 
 One hundred stratified PSU resamples refitted preprocessing, all inner and outer models,
 calibration and development-selected thresholds. All 100 completed. The exploratory 95%
-percentile interval for CBC-minus-BMI AUROC is **-0.030 to 0.069**.
+percentile interval for CBC-minus-BMI AUROC is **-0.056 to 0.051**.
 It includes zero. This is stronger than holding fitted scores fixed but not definitive:
 the outer/inner splits and hyperparameters are fixed, there are only 15 variance strata,
 and 100 resamples give limited tail precision. The code supports increasing --bootstrap
@@ -34,14 +34,14 @@ procedure. Duplicate sampled records retain their original fold assignment to pr
 
 | Analysis | N | Positives | BMI baseline AUROC | BMI+CBC AUROC | CBC gain |
 | --- | --- | --- | --- | --- | --- |
-| primary | 4612 | 106 | 0.799 | 0.823 | +0.023 |
-| bmi_observed | 4560 | 105 | 0.803 | 0.832 | +0.029 |
-| exclude_low_hgb_all_ages | 4191 | 95 | 0.795 | 0.808 | +0.012 |
-| age20_65_all | 3343 | 63 | 0.792 | 0.798 | +0.007 |
-| age20_65_exclude_low_hgb | 3061 | 55 | 0.790 | 0.781 | -0.009 |
-| fasting_hba1c | 2375 | 60 | 0.795 | 0.805 | +0.010 |
-| fasting_glucose | 2375 | 90 | 0.766 | 0.778 | +0.012 |
-| transport_2017_2018 | 3943 | 132 | 0.762 | 0.799 | +0.037 |
+| primary | 4612 | 106 | 0.801 | 0.811 | +0.010 |
+| bmi_observed | 4560 | 105 | 0.805 | 0.819 | +0.014 |
+| exclude_low_hgb_all_ages | 4191 | 95 | 0.787 | 0.794 | +0.007 |
+| age20_65_all | 3343 | 63 | 0.792 | 0.790 | -0.002 |
+| age20_65_exclude_low_hgb | 3061 | 55 | 0.798 | 0.770 | -0.028 |
+| fasting_hba1c | 2375 | 60 | 0.806 | 0.808 | +0.002 |
+| fasting_glucose | 2375 | 90 | 0.772 | 0.761 | -0.011 |
+| transport_2017_2018 | 3939 | 132 | 0.760 | 0.790 | +0.030 |
 
 The CBC gain is smaller after excluding low hemoglobin and reverses among the age-20–65
 low-hemoglobin-excluded participants. Those comparisons have fewer events and different
@@ -81,11 +81,11 @@ on models developed in the current cycle.
 
 | Model | Weighted sensitivity | Weighted deferred % | Observed deferred N | Observed missed positives |
 | --- | --- | --- | --- | --- |
-| demographics | 0.933 | 21.7 | 729 | 4 |
-| demographics_bmi | 0.937 | 38.1 | 1416 | 4 |
-| demographics_bmi_cbc | 0.945 | 38.1 | 1474 | 3 |
+| demographics | 0.970 | 18.8 | 669 | 2 |
+| demographics_bmi | 0.934 | 43.7 | 1682 | 5 |
+| demographics_bmi_cbc | 0.918 | 41.8 | 1665 | 6 |
 
-The primary CBC model achieves 94.5% weighted
+The primary CBC model achieves 91.8% weighted
 sensitivity, below the development target. Weighted deferral is almost identical between
 BMI and BMI+CBC models (about 38.1%); raw observed deferred counts differ because weights
 vary. This is an important limitation of interpreting the AUROC increase as a large reduction

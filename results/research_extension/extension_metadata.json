@@ -2,7 +2,7 @@
   "protocol_sha256": "336caf6221795d5acdf25499d660f4b6412316b46319715ffd9b532e82d1962c",
   "bootstrap_requested": 100,
   "bootstrap_failures": 0,
-  "elapsed_seconds": 151.4729881286621,
+  "elapsed_seconds": 131.66886711120605,
   "cycle_counts": [
     {
       "cycle": "2021_2023",
@@ -15,10 +15,10 @@
     },
     {
       "cycle": "2017_2018",
-      "n": 3943,
+      "n": 3939,
       "positives": 132,
       "bmi_missing": 57,
-      "weighted_prevalence": 0.020619028714090167,
+      "weighted_prevalence": 0.02064189565971602,
       "eligible_before_labs": 4137,
       "low_hgb": 352
     }
@@ -41,13 +41,23 @@
       "LBXHGB",
       "LBXHCT",
       "LBXMCVSI",
+      "LBXMCHSI",
+      "LBXMC",
       "LBXRDW",
+      "LBXNRBC",
       "LBXWBCSI",
       "LBXPLTSI",
+      "LBXMPSI",
       "LBXLYPCT",
       "LBXNEPCT",
       "LBXMOPCT",
-      "LBXEOPCT"
+      "LBXEOPCT",
+      "LBXBAPCT",
+      "LBDLYMNO",
+      "LBDNENO",
+      "LBDMONO",
+      "LBDEONO",
+      "LBDBANO"
     ]
   },
   "drop_basophil_percentage": true,

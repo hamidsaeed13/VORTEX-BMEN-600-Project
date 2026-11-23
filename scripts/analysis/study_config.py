@@ -52,15 +52,17 @@ REQUIRE_CONFIRMED_NONPREGNANT_IN_BAND = True
 PRIMARY_CUT = 6.5   # HbA1c >= 6.5%: the primary, prespecified diabetes-range label
 SECONDARY_CUT = 5.7  # HbA1c >= 5.7%: secondary/exploratory only, never the primary label
 
-# ---- CBC feature block (team decision: the stricter 11-feature set) ----
-# Excludes MCH, MCHC, MPV and basophil % relative to the full panel -- the
-# looser 15-feature set some notebooks used is NOT the canonical one.
-RED_CELL_FEATURES = ["LBXRBCSI", "LBXHGB", "LBXHCT", "LBXMCVSI", "LBXRDW"]
-WHITE_CELL_PLATELET_FEATURES = ["LBXWBCSI", "LBXPLTSI", "LBXLYPCT", "LBXNEPCT", "LBXMOPCT", "LBXEOPCT"]
-CBC_FEATURES = RED_CELL_FEATURES + WHITE_CELL_PLATELET_FEATURES  # 11 features total
-BASOPHIL_COL = "LBXBAPCT"  # required for a *complete panel* check, but not used as a model feature
-                           # (dropped from modeling: the 5-part differential is compositional data)
-COMPLETE_PANEL_FEATURES = CBC_FEATURES + [BASOPHIL_COL]  # 12: what "drew a full CBC panel" means
+# ---- CBC feature block (team decision, 2026-11-23 cohort-summary table:
+# keep all 21 CBC variables -- supersedes the earlier stricter 11-feature set
+# that excluded MCH, MCHC, MPV, basophil % and the five LBD*NO absolute counts) ----
+RED_CELL_FEATURES = ["LBXRBCSI", "LBXHGB", "LBXHCT", "LBXMCVSI", "LBXMCHSI", "LBXMC",
+                      "LBXRDW", "LBXNRBC"]  # RBC count, Hgb, Hct, MCV, MCH, MCHC, RDW, NRBC
+WHITE_CELL_PLATELET_FEATURES = ["LBXWBCSI", "LBXPLTSI", "LBXMPSI",
+                                 "LBXLYPCT", "LBXNEPCT", "LBXMOPCT", "LBXEOPCT", "LBXBAPCT",
+                                 "LBDLYMNO", "LBDNENO", "LBDMONO", "LBDEONO", "LBDBANO"]
+                                 # WBC, platelets, MPV, 5-part differential (% and absolute)
+CBC_FEATURES = RED_CELL_FEATURES + WHITE_CELL_PLATELET_FEATURES  # 21 features total
+COMPLETE_PANEL_FEATURES = CBC_FEATURES  # kept as an alias: "complete panel" now equals the model feature set
 
 # ---- Demographic baseline ----
 NUMERIC_DEMOGRAPHICS = [AGE_COL, INCOME_COL]

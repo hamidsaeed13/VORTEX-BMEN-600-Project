@@ -26,24 +26,24 @@ biomedical relevance or fairness across groups. This is not a subgroup fairness 
 
 | Model | Block | Mean AUROC loss | Permutation SD |
 |---|---|---:|---:|
-| Logistic | age | 0.1581 | 0.0236 |
-| Logistic | BMI | 0.0735 | 0.0096 |
-| Logistic | all_CBC | 0.0662 | 0.0216 |
-| Logistic | white_cells_platelets | 0.0424 | 0.0142 |
-| Logistic | race_ethnicity | 0.0358 | 0.0100 |
-| Logistic | red_cells | 0.0173 | 0.0110 |
-| Logistic | sex | 0.0093 | 0.0052 |
-| Logistic | income | 0.0080 | 0.0065 |
-| Logistic | education | 0.0048 | 0.0041 |
-| Forest | BMI | 0.0807 | 0.0138 |
-| Forest | all_CBC | 0.0707 | 0.0142 |
-| Forest | white_cells_platelets | 0.0539 | 0.0134 |
-| Forest | age | 0.0397 | 0.0100 |
-| Forest | red_cells | 0.0155 | 0.0126 |
-| Forest | race_ethnicity | 0.0102 | 0.0071 |
-| Forest | income | 0.0095 | 0.0056 |
-| Forest | sex | -0.0006 | 0.0024 |
-| Forest | education | -0.0026 | 0.0055 |
+| Logistic | age | 0.1525 | 0.0229 |
+| Logistic | BMI | 0.0752 | 0.0098 |
+| Logistic | all_CBC | 0.0536 | 0.0205 |
+| Logistic | white_cells_platelets | 0.0372 | 0.0134 |
+| Logistic | race_ethnicity | 0.0348 | 0.0110 |
+| Logistic | education | 0.0114 | 0.0051 |
+| Logistic | sex | 0.0102 | 0.0051 |
+| Logistic | red_cells | 0.0100 | 0.0116 |
+| Logistic | income | 0.0016 | 0.0062 |
+| Forest | all_CBC | 0.0967 | 0.0178 |
+| Forest | BMI | 0.0737 | 0.0133 |
+| Forest | white_cells_platelets | 0.0690 | 0.0132 |
+| Forest | age | 0.0348 | 0.0084 |
+| Forest | red_cells | 0.0209 | 0.0139 |
+| Forest | race_ethnicity | 0.0138 | 0.0055 |
+| Forest | income | 0.0113 | 0.0040 |
+| Forest | education | 0.0056 | 0.0046 |
+| Forest | sex | -0.0017 | 0.0021 |
 
 Positive AUROC/AP loss or Brier/log-loss increase means worse performance after shuffling.
 Negative values are retained. The reported SD describes random-permutation variation;

@@ -61,7 +61,7 @@ for label, condition in [
     ('Explicit no prior diagnosis (DIQ010=2)', no_dx),
     ('No reported current insulin/diabetes pills', no_meds),
     ('Exclude recorded pregnancy and indeterminate pregnancy in females 20–44', preg_ok),
-    ('Observed HbA1c and complete 12-variable CBC', complete),
+    ('Observed HbA1c and complete 21-variable CBC', complete),
 ]:
     before = int(mask.sum())
     mask &= condition

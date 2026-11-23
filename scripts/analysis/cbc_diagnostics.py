@@ -14,12 +14,18 @@ from sklearn.decomposition import PCA
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
+from sklearn.preprocessing import StandardScaler, FunctionTransformer
 import research_extension as ext
+import study_config as cfg
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'results/cbc_diagnostics'
-CBC = ext.RED + ext.WHITE
+CBC = ext.RED + ext.WHITE  # current team-agreed 21-feature panel (study_config.py, 2026-11-23)
+
+# The pre-2026-11-23 canonical set (team decision superseded by the 21-feature block above):
+# excluded MCH, MCHC, MPV, NRBC, basophil % and the five absolute differential counts.
+LEGACY_11 = ['LBXRBCSI', 'LBXHGB', 'LBXHCT', 'LBXMCVSI', 'LBXRDW',
+             'LBXWBCSI', 'LBXPLTSI', 'LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT']
 
 
 class CheckedPCA(PCA):
@@ -63,8 +69,7 @@ def build(pca):
     pre = ColumnTransformer([
         ('numeric', Pipeline([('impute', SimpleImputer(strategy='median', add_indicator=True)),
                               ('scale', StandardScaler())]), ext.NUM + ['BMXBMI']),
-        ('categorical', Pipeline([('impute', SimpleImputer(strategy='most_frequent')),
-                                 ('encode', OneHotEncoder(handle_unknown='ignore', sparse_output=False))]), ext.CAT),
+        *cfg.categorical_transformer_entries(),  # nominal one-hot, education ordinal (team decision)
         ('cbc', Pipeline([('scale', StandardScaler()), ('pca', CheckedPCA(n_components=.95, svd_solver='full'))]), CBC)])
     return Pipeline([('pre', pre), ('sparse', FunctionTransformer(csr_matrix, accept_sparse=True)),
                      ('clf', LogisticRegression(solver='liblinear', max_iter=2000))])
@@ -75,15 +80,17 @@ def main():
     full, d = ext.load_cycle('L')
     assert len(d) == 4612 and d.target.sum() == 106
     d[ext.CBC].corr().to_csv(OUT / 'cbc_correlations.csv')
-    rows = vif_table(d[ext.CBC], d._weight.to_numpy(), 'all_12')
-    rows += vif_table(d[CBC], d._weight.to_numpy(), 'drop_basophil_11')
+    rows = vif_table(d[LEGACY_11], d._weight.to_numpy(), 'legacy_11')
+    rows += vif_table(d[ext.CBC], d._weight.to_numpy(), 'full_21')
     pd.DataFrame(rows).to_csv(OUT / 'cbc_vif.csv', index=False)
     differential = d[['LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT', 'LBXBAPCT']].sum(axis=1)
     relationships = {
         'differential_sum_min': float(differential.min()),
         'differential_sum_max': float(differential.max()),
         'differential_sum_mean': float(differential.mean()),
-        'hct_minus_rbc_times_mcv_over_10_abs_median': float((d.LBXHCT - d.LBXRBCSI*d.LBXMCVSI/10).abs().median())}
+        'hct_minus_rbc_times_mcv_over_10_abs_median': float((d.LBXHCT - d.LBXRBCSI*d.LBXMCVSI/10).abs().median()),
+        'mch_minus_hgb_times_10_over_rbc_abs_median': float((d.LBXMCHSI - d.LBXHGB*10/d.LBXRBCSI).abs().median()),
+        'mchc_minus_hgb_times_100_over_hct_abs_median': float((d.LBXMC - d.LBXHGB*100/d.LBXHCT).abs().median())}
     (OUT / 'cbc_relationships.json').write_text(json.dumps(relationships, indent=2) + '\n')
     scaled = StandardScaler().fit_transform(d[CBC])
     descriptive = CheckedPCA(svd_solver='full').fit(scaled)
@@ -172,10 +179,10 @@ def main():
         table.append(f'| {r.model} | {r.AUROC:.4f} | {r.AP:.4f} | {r.Brier:.5f} | '
                      f'{r.log_loss:.5f} | {r.deferred_n} | {r.missed_n} |')
     vif = pd.DataFrame(rows)
-    top = vif.loc[(vif.block == 'drop_basophil_11') & (vif.weighting == 'survey_weighted')].nlargest(4, 'VIF')
+    top = vif.loc[(vif.block == 'full_21') & (vif.weighting == 'survey_weighted')].nlargest(4, 'VIF')
     notes = '\n'.join(f'- {r.variable}: weighted VIF {r.VIF:.1f}.' for r in top.itertuples())
     counts = sorted({int(r['components']) for r in audit if 'components' in r})
-    report = f'''# CBC collinearity and PCA supplement — 2026-11-16
+    report = f'''# CBC collinearity and PCA supplement — 2026-11-23
 
 Exploratory Phase 7 supplement on the fixed 4,612 adults / 106 positive HbA1c labels.
 The original primary analysis and independent-cycle results are preserved.
@@ -183,23 +190,33 @@ The original primary analysis and independent-cycle results are preserved.
 ## Collinearity
 
 Differential percentages sum to {differential.min():.1f}–{differential.max():.1f}%
-(mean {differential.mean():.3f}%). Basophil percentage was already removed in the
-extension; this supplement uses the same 11 predictors. Rounding makes the released
-sum approximately fixed. All-12 and drop-basophil VIFs are exported with ordinary
-and survey-weighted auxiliary regressions and an intercept.
-Dropping a rare component does not remove the strong approximate dependence among
-the remaining percentages; high VIF persists and motivates the PCA sensitivity arm.
+(mean {differential.mean():.3f}%). The team's 2026-11-23 cohort-summary decision
+supersedes the earlier 11-predictor block (which dropped MCH, MCHC, MPV, NRBC,
+basophil % and the five absolute differential counts): all 21 CBC variables are
+now kept as model features. Rounding makes the released differential sum
+approximately fixed. VIFs for both the legacy 11-predictor block and the current
+full 21-predictor block are exported with ordinary and survey-weighted auxiliary
+regressions and an intercept, so the earlier collinearity finding can be checked
+against the larger panel.
+Adding back the dropped components does not remove the strong approximate
+dependence among the differential percentages; high VIF persists and motivates
+the PCA sensitivity arm.
 
-Largest survey-weighted VIFs after dropping basophil percentage:
+Largest survey-weighted VIFs in the current full 21-predictor block:
 
 {notes}
 
-Hematocrit approximately equals RBC × MCV / 10; the median absolute residual is
-{relationships['hct_minus_rbc_times_mcv_over_10_abs_median']:.4f} hematocrit percentage points.
-HGB/HCT-derived MCH/MCHC relationships are relevant background, but MCH/MCHC are
-not among this study's predictors. High VIF does not justify causal interpretation,
-nor does it automatically invalidate penalized prediction. Retain the existing
-regularized raw-feature model and treat PCA as a secondary robustness comparison.
+Hematocrit approximately equals RBC × MCV / 10 (median absolute residual
+{relationships['hct_minus_rbc_times_mcv_over_10_abs_median']:.4f} hematocrit
+percentage points). Now that MCH and MCHC are themselves predictors, the same
+kind of near-identity applies to them: MCH ≈ HGB × 10 / RBC (median absolute
+residual {relationships['mch_minus_hgb_times_10_over_rbc_abs_median']:.4f} pg) and
+MCHC ≈ HGB × 100 / HCT (median absolute residual
+{relationships['mchc_minus_hgb_times_100_over_hct_abs_median']:.4f} g/dL) — both
+expected to inflate VIF further in the full 21-predictor block versus the legacy
+11. High VIF does not justify causal interpretation, nor does it automatically
+invalidate penalized prediction. Retain the existing regularized raw-feature
+model and treat PCA as a secondary robustness comparison.
 
 ## Matched nested comparison
 

@@ -46,5 +46,5 @@ used by the official `scripts/analysis/research_extension.py` pipeline, even tho
 read the same eligibility rule from `study_config.py`. The remaining 24-participant gap is a
 separate, still-open modeling choice: this notebook allows a participant with a partially
 missing CBC panel (imputed later), while `research_extension.py` requires a fully complete
-11-feature panel at eligibility time. That difference is not part of the shared config and
+21-feature panel at eligibility time. That difference is not part of the shared config and
 should be reconciled separately if an exact match is needed.

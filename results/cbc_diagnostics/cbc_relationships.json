@@ -2,5 +2,7 @@
   "differential_sum_min": 99.99999999999997,
   "differential_sum_max": 100.20000000000002,
   "differential_sum_mean": 100.12454466608847,
-  "hct_minus_rbc_times_mcv_over_10_abs_median": 0.03340000000000032
+  "hct_minus_rbc_times_mcv_over_10_abs_median": 0.03340000000000032,
+  "mch_minus_hgb_times_10_over_rbc_abs_median": 0.05779642097184734,
+  "mchc_minus_hgb_times_100_over_hct_abs_median": 0.06666666666666288
 }
