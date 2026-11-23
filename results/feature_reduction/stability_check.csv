@@ -1,0 +1,14 @@
+set,variable,folds_selected,total_folds,selection_rate
+candidate_13_knee,LBXRBCSI,25,25,1.0
+candidate_13_knee,LBXMCVSI,25,25,1.0
+candidate_13_knee,LBXWBCSI,25,25,1.0
+candidate_13_knee,LBXLYPCT,25,25,1.0
+candidate_13_knee,LBXMOPCT,25,25,1.0
+candidate_13_knee,LBXPLTSI,22,25,0.88
+candidate_13_knee,LBXEOPCT,16,25,0.64
+candidate_13_knee,LBXRDW,11,25,0.44
+candidate_13_knee,LBXNRBC,10,25,0.4
+candidate_13_knee,LBXMPSI,9,25,0.36
+candidate_13_knee,LBXHGB,1,25,0.04
+candidate_13_knee,LBXHCT,0,25,0.0
+candidate_13_knee,LBXNEPCT,0,25,0.0

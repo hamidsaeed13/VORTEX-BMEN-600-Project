@@ -9,12 +9,12 @@ Table 1 compares calibrated outer-fold predictions from four prespecified models
 | Model | Weighted AUROC | Conditional 95% interval | Average precision | Brier | Mean risk |
 | --- | --- | --- | --- | --- | --- |
 | age_logistic | 0.652 | 0.601–0.702 | 0.033 | 0.01939 | 1.97% |
-| demographics_logistic | 0.720 | 0.662–0.778 | 0.045 | 0.01929 | 1.99% |
-| cbc_demographics_logistic | 0.770 | 0.713–0.827 | 0.068 | 0.01910 | 1.98% |
-| cbc_demographics_forest | 0.720 | 0.665–0.775 | 0.044 | 0.01929 | 2.01% |
+| demographics_logistic | 0.717 | 0.669–0.765 | 0.047 | 0.01928 | 1.99% |
+| cbc_demographics_logistic | 0.786 | 0.732–0.839 | 0.073 | 0.01903 | 2.00% |
+| cbc_demographics_forest | 0.701 | 0.627–0.775 | 0.050 | 0.01924 | 2.03% |
 
-CBC logistic minus demographics logistic weighted AUROC is 0.050,
-with a paired conditional design interval of -0.012 to 0.112.
+CBC logistic minus demographics logistic weighted AUROC is 0.069,
+with a paired conditional design interval of -0.004 to 0.142.
 The interval includes zero: these results suggest incremental discrimination but do not clearly
 resolve the gain at this uncertainty level. Average precision should be read against the
 weighted prevalence of about 0.020; high overall accuracy or NPV alone is uninformative here.
@@ -77,9 +77,9 @@ learning procedure, not a single deployable cutoff.
 | Model | Weighted sensitivity | Weighted NPV | Weighted deferred % | Observed deferred N | Observed positives missed |
 | --- | --- | --- | --- | --- | --- |
 | age_logistic | 0.935 | 0.9949 | 25.1 | 788 | 4 |
-| cbc_demographics_forest | 0.966 | 0.9976 | 28.4 | 1116 | 4 |
-| cbc_demographics_logistic | 0.928 | 0.9952 | 29.9 | 1152 | 6 |
-| demographics_logistic | 0.976 | 0.9979 | 22.9 | 817 | 2 |
+| cbc_demographics_forest | 0.909 | 0.9934 | 27.2 | 1106 | 6 |
+| cbc_demographics_logistic | 0.951 | 0.9970 | 33.3 | 1305 | 4 |
+| demographics_logistic | 0.990 | 0.9990 | 20.1 | 716 | 1 |
 
 All observed miss counts use the same 106 positive participants. Weighted sensitivity and
 weighted deferred percentages do not equal raw count ratios. The policy CSV includes raw

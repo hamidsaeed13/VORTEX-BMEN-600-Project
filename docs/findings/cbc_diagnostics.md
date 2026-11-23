@@ -1,54 +1,55 @@
-# CBC collinearity and PCA supplement — 2026-11-23
+# CBC collinearity and PCA supplement — 2026-11-23 (updated for the Phase 15 locked 9-feature set)
 
 Exploratory Phase 7 supplement on the fixed 4,612 adults / 106 positive HbA1c labels.
 The original primary analysis and independent-cycle results are preserved.
 
-## Collinearity
+## Collinearity: three stages of this project's CBC feature-block history
 
-Differential percentages sum to 100.0–100.2%
-(mean 100.125%). The team's 2026-11-23 cohort-summary decision
-supersedes the earlier 11-predictor block (which dropped MCH, MCHC, MPV, NRBC,
-basophil % and the five absolute differential counts): all 21 CBC variables are
-now kept as model features. Rounding makes the released differential sum
-approximately fixed. VIFs for both the legacy 11-predictor block and the current
-full 21-predictor block are exported with ordinary and survey-weighted auxiliary
-regressions and an intercept, so the earlier collinearity finding can be checked
-against the larger panel.
-Adding back the dropped components does not remove the strong approximate
-dependence among the differential percentages; high VIF persists and motivates
-the PCA sensitivity arm.
+1. **legacy_11** (pre-2026-11-23): excluded MCH, MCHC, MPV, NRBC, basophil % and the five
+   absolute differential counts. Worst survey-weighted VIF was ~808 (`LBXNEPCT`).
+2. **historical_21** (2026-11-23 cohort-summary decision): briefly kept all 21 CBC variables.
+   Differential percentages sum to 100.0–100.2%
+   (mean 100.125%) by construction, so any 4 of the 5 determine the 5th;
+   combined with MCH/MCHC/absolute-count redundancy this drove worst VIF to ~26,000
+   (`LBXNEPCT`).
+3. **current** (locked default as of Phase 15 Step 3, this report): the 9-feature set below,
+   after every one of the 12 dropped `historical_21` columns was confirmed by direct
+   marginal-addition testing (add it back alone, measure AUROC over 25 repeated PSU-grouped
+   folds) to add no measurable gain -- see `docs/findings/feature_reduction.md`.
 
-Largest survey-weighted VIFs in the current full 21-predictor block:
+Largest survey-weighted VIFs in the **current 9-predictor block**:
 
-- LBXNEPCT: weighted VIF 25982.8.
-- LBXLYPCT: weighted VIF 22005.5.
-- LBXEOPCT: weighted VIF 1345.2.
-- LBXMOPCT: weighted VIF 1336.1.
+- LBXHCT: weighted VIF 144.4.
+- LBXRBCSI: weighted VIF 135.1.
+- LBXMCVSI: weighted VIF 55.5.
+- LBXHGB: weighted VIF 18.9.
 
-Hematocrit approximately equals RBC × MCV / 10 (median absolute residual
-0.0334 hematocrit
-percentage points). Now that MCH and MCHC are themselves predictors, the same
-kind of near-identity applies to them: MCH ≈ HGB × 10 / RBC (median absolute
-residual 0.0578 pg) and
-MCHC ≈ HGB × 100 / HCT (median absolute residual
-0.0667 g/dL) — both
-expected to inflate VIF further in the full 21-predictor block versus the legacy
-11. High VIF does not justify causal interpretation, nor does it automatically
-invalidate penalized prediction. Retain the existing regularized raw-feature
-model and treat PCA as a secondary robustness comparison.
+This is a >180x reduction from `historical_21`'s worst VIF (~26,000) and still an improvement
+on `legacy_11`'s (~808) — the remaining collinearity is just the expected, mild
+RBC/MCV/HCT/HGB red-cell-index relationship (hematocrit approximately equals RBC × MCV / 10;
+median absolute residual 0.0334
+hematocrit percentage points). MCH and MCHC are no longer predictors in the current block (they
+were dropped as algebraically redundant with HGB/RBC/HCT, confirmed by direct test, not just
+VIF), so those near-identities are reported here only as historical context: MCH ≈ HGB × 10 / RBC
+(median absolute residual 0.0578 pg)
+and MCHC ≈ HGB × 100 / HCT (median absolute residual
+0.0667 g/dL). The white-cell/platelet/
+differential features in the current block (WBC, platelets, lymphocyte/monocyte/eosinophil %)
+now show essentially no collinearity (VIF ≈ 1) — the two differential percentages dropped
+(neutrophil %, basophil %) were exactly what drove the `historical_21` compositional blow-up.
 
 ## Matched nested comparison
 
 Both models use demographics and BMI. Only the CBC representation changes. PCA
-retains 95% variance with component counts [11] across inner/outer training fits.
+retains 95% variance with component counts [7] across inner/outer training fits.
 Scaling/PCA are unweighted; classifiers, calibration and evaluation use WTPH2YR.
 Five outer / three inner PSU-grouped folds match the extension. Calibration and
 95%-weighted-sensitivity thresholds use development data only.
 
 | Model | AUROC | AP | Brier | Log loss | Deferred | Missed / 106 |
 |---|---:|---:|---:|---:|---:|---:|
-| demographics_bmi_cbc | 0.8107 | 0.0758 | 0.01902 | 0.08546 | 1665 | 6 |
-| demographics_bmi_cbc_pca95 | 0.8141 | 0.0768 | 0.01901 | 0.08546 | 1756 | 4 |
+| demographics_bmi_cbc | 0.8347 | 0.0865 | 0.01897 | 0.08364 | 1601 | 2 |
+| demographics_bmi_cbc_pca95 | 0.8349 | 0.0877 | 0.01897 | 0.08355 | 1613 | 3 |
 
 Deferred and missed are observed counts; the development sensitivity target does
 not guarantee held-out sensitivity. Conditional design intervals are exported,

@@ -52,23 +52,75 @@ REQUIRE_CONFIRMED_NONPREGNANT_IN_BAND = True
 PRIMARY_CUT = 6.5   # HbA1c >= 6.5%: the primary, prespecified diabetes-range label
 SECONDARY_CUT = 5.7  # HbA1c >= 5.7%: secondary/exploratory only, never the primary label
 
-# ---- CBC feature block (team decision, 2026-11-23 cohort-summary table:
-# keep all 21 CBC variables -- supersedes the earlier stricter 11-feature set
-# that excluded MCH, MCHC, MPV, basophil % and the five LBD*NO absolute counts) ----
-RED_CELL_FEATURES = ["LBXRBCSI", "LBXHGB", "LBXHCT", "LBXMCVSI", "LBXMCHSI", "LBXMC",
-                      "LBXRDW", "LBXNRBC"]  # RBC count, Hgb, Hct, MCV, MCH, MCHC, RDW, NRBC
-WHITE_CELL_PLATELET_FEATURES = ["LBXWBCSI", "LBXPLTSI", "LBXMPSI",
-                                 "LBXLYPCT", "LBXNEPCT", "LBXMOPCT", "LBXEOPCT", "LBXBAPCT",
-                                 "LBDLYMNO", "LBDNENO", "LBDMONO", "LBDEONO", "LBDBANO"]
-                                 # WBC, platelets, MPV, 5-part differential (% and absolute)
-CBC_FEATURES = RED_CELL_FEATURES + WHITE_CELL_PLATELET_FEATURES  # 21 features total
+# ---- CBC feature block: INITIAL (where we started) vs REDUCED (where Phase 15 got to) ----
+#
+# INITIAL (team decision, 2026-11-23 cohort-summary table): keep all 21 CBC variables --
+# supersedes the earlier stricter 11-feature set that excluded MCH, MCHC, MPV, basophil %
+# and the five LBD*NO absolute counts. This is the block every already-published result in
+# this repo (docs/findings/*, results/*) was computed with.
+RED_CELL_FEATURES_INITIAL = ["LBXRBCSI", "LBXHGB", "LBXHCT", "LBXMCVSI", "LBXMCHSI", "LBXMC",
+                             "LBXRDW", "LBXNRBC"]  # RBC count, Hgb, Hct, MCV, MCH, MCHC, RDW, NRBC
+WHITE_CELL_PLATELET_FEATURES_INITIAL = ["LBXWBCSI", "LBXPLTSI", "LBXMPSI",
+                                        "LBXLYPCT", "LBXNEPCT", "LBXMOPCT", "LBXEOPCT", "LBXBAPCT",
+                                        "LBDLYMNO", "LBDNENO", "LBDMONO", "LBDEONO", "LBDBANO"]
+                                        # WBC, platelets, MPV, 5-part differential (% and absolute)
+CBC_FEATURES_INITIAL = RED_CELL_FEATURES_INITIAL + WHITE_CELL_PLATELET_FEATURES_INITIAL  # 21 features
+
+# REDUCED (Phase 15 feature-reduction candidate, 2026-11-23; see docs/findings/feature_reduction.md
+# and scripts/analysis/feature_reduction.py). Not yet locked as the project's canonical block --
+# kept alongside INITIAL so scripts/phase-2/ can run and compare both. Every one of the 12
+# dropped columns was tested by direct marginal-addition (add it back alone, measure AUROC
+# over 25 repeated PSU-grouped folds) and showed no measurable gain (all within +/-8% of their
+# own fold-to-fold SD -- noise level), so this is not just a parsimony trade-off.
+RED_CELL_FEATURES_REDUCED = ["LBXRBCSI", "LBXHGB", "LBXHCT", "LBXMCVSI"]
+WHITE_CELL_PLATELET_FEATURES_REDUCED = ["LBXWBCSI", "LBXPLTSI", "LBXLYPCT", "LBXMOPCT", "LBXEOPCT"]
+CBC_FEATURES_REDUCED = RED_CELL_FEATURES_REDUCED + WHITE_CELL_PLATELET_FEATURES_REDUCED  # 9 features
+
+# ---- LOCKED (2026-11-23 team decision, Phase 15 Step 3): the unqualified names every script
+# reads now resolve to REDUCED, not INITIAL. Validated via scripts/phase-2/'s full pipeline
+# re-run (bootstrap, independent-cycle transport) in docs/findings/phase2_feature_variant_comparison.md --
+# the reduced set won on every logistic model and every scenario tested. INITIAL is kept above,
+# unchanged, as the historical starting point and is still what scripts/phase-2/ compares against. ----
+RED_CELL_FEATURES = RED_CELL_FEATURES_REDUCED
+WHITE_CELL_PLATELET_FEATURES = WHITE_CELL_PLATELET_FEATURES_REDUCED
+CBC_FEATURES = CBC_FEATURES_REDUCED  # 9 features total
 COMPLETE_PANEL_FEATURES = CBC_FEATURES  # kept as an alias: "complete panel" now equals the model feature set
 
-# ---- Demographic baseline ----
-NUMERIC_DEMOGRAPHICS = [AGE_COL, INCOME_COL]
-NOMINAL_DEMOGRAPHICS = [SEX_COL, RACE_ETH_COL]      # one-hot encoded: no natural order
-ORDINAL_DEMOGRAPHICS = [EDUCATION_COL]              # ordinal encoded (team decision, below)
+# ---- Demographic baseline: INITIAL vs REDUCED ----
+#
+# INITIAL: age + income (where every already-published result was computed).
+# REDUCED (Phase 15): income dropped -- near-zero/negative marginal AUROC contribution in both
+# the direct ablation and the pre-existing permutation-importance findings (convergent evidence
+# across two methods; see docs/findings/feature_reduction.md). Education is NOT dropped here:
+# ablation and permutation importance disagreed on it, and dropping it together with income
+# costs ~8x more than the sum of dropping each alone (they're correlated, rho=0.50) -- so
+# education stays in both INITIAL and REDUCED.
+NUMERIC_DEMOGRAPHICS_INITIAL = [AGE_COL, INCOME_COL]
+NUMERIC_DEMOGRAPHICS_REDUCED = [AGE_COL]
+NUMERIC_DEMOGRAPHICS = NUMERIC_DEMOGRAPHICS_REDUCED  # locked default (2026-11-23, Phase 15 Step 3): income dropped
+
+NOMINAL_DEMOGRAPHICS = [SEX_COL, RACE_ETH_COL]      # one-hot encoded: no natural order; same in both variants
+ORDINAL_DEMOGRAPHICS = [EDUCATION_COL]              # ordinal encoded (team decision, below); same in both variants
 CATEGORICAL_DEMOGRAPHICS = NOMINAL_DEMOGRAPHICS + ORDINAL_DEMOGRAPHICS  # kept for descriptive/legacy use
+
+# ---- Named variants for scripts/phase-2/ to run/compare both "where we started" and "where we
+# are now" without each one re-deriving the same lists. Legend labels are for figures/tables. ----
+FEATURE_SET_VARIANTS = {
+    "initial": dict(
+        label="Initial (21 CBC features + income)",
+        cbc_features=CBC_FEATURES_INITIAL,
+        red_cell_features=RED_CELL_FEATURES_INITIAL,
+        white_cell_platelet_features=WHITE_CELL_PLATELET_FEATURES_INITIAL,
+        numeric_demographics=NUMERIC_DEMOGRAPHICS_INITIAL,
+    ),
+    "reduced": dict(
+        label="Reduced (9 CBC features, no income)",
+        cbc_features=CBC_FEATURES_REDUCED,
+        red_cell_features=RED_CELL_FEATURES_REDUCED,
+        white_cell_platelet_features=WHITE_CELL_PLATELET_FEATURES_REDUCED,
+        numeric_demographics=NUMERIC_DEMOGRAPHICS_REDUCED,
+    ),
+}
 
 # ---- Education encoding (team decision, notebooks/Phase 6.ipynb) ----
 # Ordinal vs one-hot gave no measurable AUROC difference (0.727 vs 0.727 logistic,

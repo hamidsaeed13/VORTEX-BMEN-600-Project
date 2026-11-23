@@ -237,7 +237,7 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
       ignores NHANES clustering/stratification)
 - [x] Use held-out permutation importance instead of impurity-based importance for predictor
       interpretation: [analysis and limitations](../findings/permutation_importance.md).
-      Two existing models, nine blocks, 20 within-PSU permutations; frozen development-only
+      Two existing models, eight blocks (income dropped, Phase 15), 20 within-PSU permutations; frozen development-only
       preprocessing/calibration and weighted evaluation. Permutation SD is not a confidence interval.
 - [x] Subgroup/sensitivity analysis: compare HbA1c-based and fasting-glucose-based results to
       check sensitivity to HbA1c-related measurement effects (e.g. anemia)
@@ -270,7 +270,82 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
 
 ## Phase 15 — CBC feature reduction (blocking item before final model comparison)
 
-**Status (2026-11-23):** Not started. The team decided (cohort-summary table, same meeting as
+**Status (2026-11-23):** Steps 1-2 complete with a concrete candidate for Step 3 review — see
+[feature reduction findings](../findings/feature_reduction.md) and
+`scripts/analysis/feature_reduction.py`. Key results: dropping only the algebraically-redundant
+columns (MCH, MCHC, 5 absolute counts) barely reduces VIF for the worst offenders
+(`LBXNEPCT`/`LBXLYPCT`); the real driver is the 5-part differential's compositional constraint
+(sums to ~100%), fixed by also dropping one percentage (basophil %) — together these bring VIF
+from ~26,000 back to ~809 (13-feature `candidate_13`). An L1 path on this de-redundanced set
+reaches a *higher* best AUROC (0.8108) than the naive full-21 L1 path (0.8091) with fewer
+features. A 25-fold repeated-CV stability check (not just one split) found a reliably-selected
+core of 7 features (RBC, MCV, WBC, lymphocyte %, monocyte %, platelet count, eosinophil %) — one
+of the original 8 knee features (MPV) turned out to be unstable (36% selection rate) and
+shouldn't have been trusted from the single-split result alone. Adding hemoglobin/hematocrit
+back for clinical face validity costs ~nothing in AUROC (0.8211→0.8210), so the proposed
+**9-feature candidate** is: RBC, HGB, HCT, MCV, WBC, platelet count, lymphocyte %, monocyte %,
+eosinophil % — dropping MCH, MCHC, all 5 absolute counts, basophil %, neutrophil %, RDW, NRBC
+and MPV.
+
+**Direct validation (2026-11-23, per team instruction to verify nothing informative is being
+dropped even if it matters "a little"):** every one of the 12 dropped CBC features was tested
+individually — added back alone to the 9-feature base, repeated 25-fold weighted-AUROC
+comparison. None showed a real gain (all within ±8% of their own fold-to-fold SD, i.e. noise).
+This specifically resolves the neutrophil-% concern raised earlier (dropped only because it lost
+a collinear tie-break against lymphocyte % under L1, not confirmed non-redundant at the time):
+it gains -0.0001 AUROC when added back, confirming the drop is safe, not an L1 artifact. The
+9-feature candidate is now evidence-backed as not discarding any informative feature, checked
+directly rather than inferred from VIF/L1 behavior alone.
+
+**Scope then expanded to all features, not just CBC** (2026-11-23): a repeated (25-fold)
+leave-one-block-out ablation tested age, income, sex, race/ethnicity, education and BMI for
+removal too, alongside the reduced CBC block. Age, BMI, race/ethnicity and the reduced CBC block
+all show clear, low-noise positive contributions and should be kept. **Income shows ~zero
+marginal contribution in both this ablation and the existing permutation-importance findings
+(convergent evidence it can be dropped).** Sex is small but likely real. Education is the one
+genuine disagreement between methods (ablation: ~0; permutation importance: modest positive) —
+flagged for the team rather than resolved unilaterally.
+
+**Completeness check (2026-11-23):** income and education are correlated (Spearman ρ=0.50), so
+dropping both costs ~8x more than the sum of dropping each alone (0.0055 vs. 0.0007) — they
+partially substitute for each other, so at least one should stay even though either looks
+individually droppable. **Bottom line:** the proposed 14-feature model (age, BMI, sex,
+race/ethnicity, education, 9-feature reduced CBC — income dropped) scores *higher* than the
+current 27-feature baseline (0.8357 vs. 0.8241 weighted AUROC), not just equivalent with fewer
+features. See [feature reduction findings](../findings/feature_reduction.md) for the full
+comparison tables and three explicit scope caveats: (1) not yet validated against the
+independent 2017-2018 cycle (Step 4 work), (2) dropping income/education from the model is a
+predictive-modeling decision, not a claim about real-world health-disparity relevance, and (3)
+this only reduced the *current* feature set — Phase 9's list of never-added NHANES variables
+(lipids, insulin, hs-CRP, liver/kidney markers, smoking, blood pressure, family history, etc.)
+was not screened and is a separate scope question for the team.
+
+**Head-to-head pipeline validation (2026-11-23):** `study_config.py` now carries both variants
+explicitly (`CBC_FEATURES_INITIAL`/`_REDUCED`, `NUMERIC_DEMOGRAPHICS_INITIAL`/`_REDUCED`, and a
+`FEATURE_SET_VARIANTS` lookup with display labels) — the unqualified names every existing script
+reads are untouched and still resolve to `INITIAL`. A new `scripts/phase-2/` holds copies of
+`cohort_analysis.py`, `weighted_calibration_analysis.py` and `research_extension.py`,
+parameterized to run under both variants and write to `results/phase-2/<script>/{initial,reduced,comparison}/`
+with labeled-legend comparison figures. Result, across all three scripts and every scenario
+`research_extension.py` tests (including the independent 2017-2018 cycle): the reduced set wins
+for every logistic model (+0.012 to +0.024 AUROC), forest results are mixed. See
+[the full comparison](../findings/phase2_feature_variant_comparison.md).
+
+**Step 3 locked (2026-11-23):** `study_config.py`'s unqualified names (`CBC_FEATURES`,
+`NUMERIC_DEMOGRAPHICS`, `RED_CELL_FEATURES`, `WHITE_CELL_PLATELET_FEATURES`) now resolve to the
+9-feature reduced block and income-dropped demographics by default. `*_INITIAL` is retained
+unchanged as the historical starting point. **Step 4 done:** the full official pipeline was
+re-run with the locked set — `cohort_analysis.py`, `research_extension.py --bootstrap 100`,
+`weighted_calibration_analysis.py`, `cbc_diagnostics.py` (reworked to a three-stage
+legacy_11/historical_21/current_9 comparison; worst VIF dropped from ~26,000 to ~144, a >180x
+improvement), `heldout_permutation_importance.py` (income block removed — it's no longer a
+model input, so permuting it was a structural no-op, not a "zero importance" finding), every
+verification script (cohort-size and external-cycle-size assertions updated: external cycle grew
+from 3,939 to 3,943 under the less-restrictive 9-column completeness requirement), and all
+notebooks. All findings docs and README updated with the new numbers. Steps 5-6 (gradient
+boosting, final locked holdout evaluation) remain open.
+
+The team decided (cohort-summary table, same meeting as
 the 21-feature CBC decision) that feature reduction happens as its own dedicated stage, not
 folded into the current 21-feature baseline. This phase exists to track that work explicitly so
 it isn't lost. Trigger/evidence: Phase 7's VIF check on the full 21-feature block found VIF up to
@@ -285,23 +360,23 @@ difference (0.8107 vs 0.8141), so compressing to components buys nothing and wou
 the resulting panel non-actionable (a lab can't "order less of" a PCA component). Reduction
 needs a supervised, name-preserving method instead.
 
-- [ ] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
+- [x] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
       before any data-driven selection: MCH, MCHC (implied by HGB/RBC/HCT already kept) and the
       five absolute differential counts (implied by WBC × percentage already kept). Re-run VIF
       (`cbc_diagnostics.py`) on the resulting ~14-feature set to confirm this brings VIF back down
       toward the legacy-block range.
-- [ ] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
+- [x] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
       regularization path (nested CV, development data only, matching the existing
       `weighted_calibration_analysis.py`/`research_extension.py` fold structure) to see which CBC
       coefficients survive at an AUROC-preserving penalty. Cross-check against the existing
       held-out permutation-importance results (`docs/findings/permutation_importance.md`) and VIF
       — a feature that's both low-importance and high-VIF is a strong drop candidate; a
       low-VIF/low-importance feature is a weaker one (drop for parsimony, not collinearity).
-- [ ] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
+- [x] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
       a new canonical block in `study_config.py` (same pattern as `CBC_FEATURES`), with the
       rationale (which columns were dropped and why), the same way the 11→21 and 21→reduced
       decisions are now tracked here.
-- [ ] **Step 4 — head-to-head model comparison on the locked set.** Re-run the full pipeline
+- [x] **Step 4 — head-to-head model comparison on the locked set.** Re-run the full pipeline
       (`cohort_analysis.py`, `weighted_calibration_analysis.py`, `research_extension.py` and their
       notebooks) with the reduced block, producing one comparison table across: age-only,
       demographics, demographics+BMI, demographics+BMI+full-21-CBC (current baseline),

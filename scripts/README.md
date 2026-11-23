@@ -17,11 +17,33 @@ Install `requirements.txt` at the project root. From that root:
 | Verify research extension | `python scripts/verification/verify_research_extension.py` | `docs/verification/research_extension_validation.json` |
 | Verify organization-only changes against the research commit | `python scripts/verification/verify_organization.py` | `docs/verification/organization_validation.json` |
 | Render contributor review tabs | `python scripts/reporting/render_team_review.py` | `docs/reviews/TEAM_REVIEW.html` from the Markdown review |
+| CBC/demographic feature-reduction exploration (Phase 15) | `python scripts/analysis/feature_reduction.py` | `results/feature_reduction/`, [findings](../docs/findings/feature_reduction.md) |
 
 The report generator writes only notebooks 05–06. The other scripts do not rewrite notebooks.
 Analysis scripts regenerate their own outputs; they do not select new cohort/model choices.
 The full extension includes 100 refitted survey resamples and takes longer than reading the
 saved-results notebooks. Notebooks 05–06 default to displaying those saved results.
+
+## Phase 2: initial-vs-reduced feature-set comparison
+
+`scripts/phase-2/` holds copies of the three core modeling scripts above
+(`cohort_analysis.py`, `weighted_calibration_analysis.py`, `research_extension.py`),
+parameterized to run under both the `initial` (21 CBC features + income) and `reduced` (9 CBC
+features, no income) variants now defined in `scripts/analysis/study_config.py`
+(`FEATURE_SET_VARIANTS`). The originals above are untouched and still run the `initial` variant
+only.
+
+| Command | Outputs |
+|---|---|
+| `python scripts/phase-2/cohort_analysis.py` | `results/phase-2/cohort_analysis/{initial,reduced,comparison}/` |
+| `python scripts/phase-2/weighted_calibration_analysis.py` | `results/phase-2/weighted_calibration/{initial,reduced,comparison}/` |
+| `python scripts/phase-2/research_extension.py --bootstrap 100` | `results/phase-2/research_extension/{initial,reduced,comparison}/` |
+
+Each `comparison/` folder has merged CSVs and labeled-legend bar charts. See
+[the full writeup](../docs/findings/phase2_feature_variant_comparison.md). `cbc_diagnostics.py`
+and `heldout_permutation_importance.py` were not duplicated here — they're diagnostic tools for
+a *given* feature set (collinearity, held-out importance), not part of the initial-vs-reduced
+performance comparison.
 
 Raw 2021–2023 files are under `data/raw/2021_2023/`; the downloaded laboratory reference
 collection remains in its `laboratory/` subfolder. Independent-cycle inputs are under

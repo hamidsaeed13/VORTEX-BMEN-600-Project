@@ -1,0 +1,14 @@
+{
+  "variant": "initial",
+  "label": "Initial (21 CBC features + income)",
+  "n": 4612,
+  "positives": 106,
+  "n_cbc_features": 21,
+  "weighted_prevalence": 0.019881436273137577,
+  "strata": 15,
+  "psus": 30,
+  "design_df": 15,
+  "outer_folds": 5,
+  "inner_folds": 3,
+  "seed": 42
+}

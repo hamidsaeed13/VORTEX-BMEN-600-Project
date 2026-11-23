@@ -108,6 +108,26 @@ leak identified in [the team review](docs/reviews/TEAM_REVIEW.md). Supersedes th
 </details>
 
 <details>
+<summary>Phase 15 — CBC/demographic feature reduction, locked 2026-11-23</summary>
+
+- [Exploration script](scripts/analysis/feature_reduction.py) · [findings](docs/findings/feature_reduction.md)
+- [Phase 2 initial-vs-reduced pipeline comparison](scripts/phase-2/) · [findings](docs/findings/phase2_feature_variant_comparison.md)
+- [Project plan](docs/planning/PROJECT_PLAN.md#phase-15--cbc-feature-reduction-blocking-item-before-final-model-comparison)
+
+Drops the CBC panel from 21 to 9 features (every dropped feature individually confirmed to add
+no measurable AUROC, not just inferred from collinearity) and income from the demographic
+baseline. `study_config.py`'s unqualified names (`CBC_FEATURES`, `NUMERIC_DEMOGRAPHICS`, etc.)
+now resolve to this **reduced** block — every script and notebook above reads it by default.
+The original 21-feature/income block is retained explicitly as `*_INITIAL` for comparison; the
+`scripts/phase-2/` copies still run and compare both. Validated via the full official pipeline,
+not just the exploratory script: the reduced set won on every logistic model and every scenario
+`research_extension.py` tests, including the independent 2017–2018 cycle, and the locked
+9-feature CBC block's worst collinearity (VIF ≈ 144) is a >180x improvement on the 21-feature
+stage's (≈26,000) — see `docs/findings/cbc_diagnostics.md`.
+
+</details>
+
+<details>
 <summary>Literature, writing and project management</summary>
 
 - [Literature evidence and source notes](literature/README.md)
@@ -198,7 +218,17 @@ Known Uncertainties), not as an interchangeable primary outcome.
    `LBXSGL`, ~6,357 measurements, non-fasting), which we have not yet incorporated; it is not
    interchangeable with the fasting or diagnostic definitions without reviewing specimen/fasting-
    status differences first. Self-reported diagnosis is used to define eligibility (now an
-   exclusion, not just a stratifier) rather than a third interchangeable outcome.
+   exclusion, not just a stratifier) rather than a third interchangeable outcome. The CBC feature
+   block in the same file went through its own history: 11 features → 21 (2026-11-23) → the
+   current **locked 9-feature reduced block** (Phase 15 Step 3, 2026-11-23) — RBC, hemoglobin,
+   hematocrit, MCV, WBC, platelet count, lymphocyte %, monocyte %, eosinophil %. Every one of the
+   12 dropped columns (relative to the 21-feature stage) was confirmed by direct marginal-addition
+   testing (add it back alone, measure AUROC over 25 repeated folds) to add no measurable gain —
+   see `docs/findings/feature_reduction.md` and the full-pipeline initial-vs-reduced validation in
+   `docs/findings/phase2_feature_variant_comparison.md`. Income (`INDFMPIR`) was also dropped from
+   the demographic baseline on the same evidence (near-zero/negative marginal AUROC, confirmed
+   against the pre-existing permutation-importance finding). `scripts/analysis/study_config.py`
+   still carries the original 21-feature/income block explicitly as `*_INITIAL` for comparison.
 2. **Decision threshold, not just accuracy:** because of the cost asymmetry
    between an unnecessary test and a missed diagnosis, the model must be
    evaluated on sensitivity/NPV at clinically defensible thresholds, not
@@ -282,10 +312,10 @@ open items.
 
 Notebook 02's cohort now follows `study_config.py` (4,619 examined adults 20+, 106 positive at
 HbA1c ≥6.5%). It compares age-only logistic regression (held-out AUROC **0.605**), age + sex
-logistic regression (**0.562**), CBC + age + sex logistic regression (**0.619**), age + sex
-random forest (**0.536**), and CBC + age + sex random forest (**0.630**). CBC adds discrimination
-beyond age + sex in both model families (+0.057 logistic, +0.094 forest), using the team's
-21-feature CBC block (see Known Uncertainty #1). These remain
+logistic regression (**0.562**), CBC + age + sex logistic regression (**0.650**), age + sex
+random forest (**0.536**), and CBC + age + sex random forest (**0.642**). CBC adds discrimination
+beyond age + sex in both model families (+0.088 logistic, +0.106 forest), using the team's
+Phase 15 locked 9-feature CBC block (see Known Uncertainty #1). These remain
 unweighted single-split exploratory results; the notebook now prints its AUROC/threshold tables
 inline rather than exporting them to `results/baseline/` — the CSVs/figures still sitting in
 that folder are a historical snapshot from an earlier version of this notebook and are not
@@ -333,11 +363,11 @@ SDMVSTRA/SDMVPSU guide splitting and conditional jackknife variance, not predict
 Class balancing is removed; imputation/scaling remain unweighted within training folds.
 The full survey design is retained before selecting the analytic domain.
 
-Calibrated weighted AUROC is 0.720 for demographics and 0.770 for CBC + demographics logistic
+Calibrated weighted AUROC is 0.717 for demographics and 0.786 for CBC + demographics logistic
 regression. The paired conditional interval for the gain includes zero. Mean calibrated CBC
-logistic risk is 1.98%, close to weighted prevalence; this alone does not establish calibration.
-Its outer-fold policy evaluation defers 1,152 observed tests and misses 6/106 positive labels
-(92.8% weighted sensitivity). This does not establish safe clinical deferral. Intervals condition
+logistic risk is 2.00%, close to weighted prevalence; this alone does not establish calibration.
+Its outer-fold policy evaluation defers 1,305 observed tests and misses 4/106 positive labels
+(95.1% weighted sensitivity). This does not establish safe clinical deferral. Intervals condition
 on fitted scores/thresholds and exclude training variability; independent validation remains.
 
 ### Research extension: BMI, robustness and independent evaluation (notebooks 05–06)
@@ -359,7 +389,7 @@ models are in `results/research_extension/`; these joblib files are trusted proj
 files to load from unknown sources. Notebooks 05–06 display completed results; notebook 05
 can rerun the full analysis by changing `RUN_ANALYSIS`.
 
-CBC adds 0.010 AUROC beyond demographics+BMI in the current cohort, with an exploratory
+CBC adds 0.019 AUROC beyond demographics+BMI in the current cohort, with an exploratory
 full-refit interval spanning zero. Ranking improves in the independent earlier cycle while
 probability error worsens. See [results](docs/findings/research_extension_results.md),
 [literature matrix](literature/extension_evidence_matrix.md),

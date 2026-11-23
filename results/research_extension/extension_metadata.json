@@ -2,7 +2,7 @@
   "protocol_sha256": "336caf6221795d5acdf25499d660f4b6412316b46319715ffd9b532e82d1962c",
   "bootstrap_requested": 100,
   "bootstrap_failures": 0,
-  "elapsed_seconds": 131.66886711120605,
+  "elapsed_seconds": 111.70924687385559,
   "cycle_counts": [
     {
       "cycle": "2021_2023",
@@ -15,49 +15,34 @@
     },
     {
       "cycle": "2017_2018",
-      "n": 3939,
+      "n": 3943,
       "positives": 132,
       "bmi_missing": 57,
-      "weighted_prevalence": 0.02064189565971602,
+      "weighted_prevalence": 0.020619028714090167,
       "eligible_before_labs": 4137,
       "low_hgb": 352
     }
   ],
   "primary_specs": {
     "demographics": [
-      "RIDAGEYR",
-      "INDFMPIR"
+      "RIDAGEYR"
     ],
     "demographics_bmi": [
       "RIDAGEYR",
-      "INDFMPIR",
       "BMXBMI"
     ],
     "demographics_bmi_cbc": [
       "RIDAGEYR",
-      "INDFMPIR",
       "BMXBMI",
       "LBXRBCSI",
       "LBXHGB",
       "LBXHCT",
       "LBXMCVSI",
-      "LBXMCHSI",
-      "LBXMC",
-      "LBXRDW",
-      "LBXNRBC",
       "LBXWBCSI",
       "LBXPLTSI",
-      "LBXMPSI",
       "LBXLYPCT",
-      "LBXNEPCT",
       "LBXMOPCT",
-      "LBXEOPCT",
-      "LBXBAPCT",
-      "LBDLYMNO",
-      "LBDNENO",
-      "LBDMONO",
-      "LBDEONO",
-      "LBDBANO"
+      "LBXEOPCT"
     ]
   },
   "drop_basophil_percentage": true,

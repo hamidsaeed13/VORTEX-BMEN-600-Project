@@ -17,8 +17,12 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'results/permutation_importance'
 REPEATS = 20
 SEED = 20261116
+# Income (INDFMPIR) is deliberately absent: Phase 15 dropped it from the model (near-zero/
+# negative marginal AUROC in both ablation and this script's own earlier permutation-importance
+# finding -- see docs/findings/feature_reduction.md). Permuting a column the fitted model never
+# reads is a no-op (always exactly zero importance, not a finding), so it's not a block here.
 BLOCKS = {'age': ['RIDAGEYR'], 'sex': ['RIAGENDR'], 'race_ethnicity': ['RIDRETH3'],
-          'education': ['DMDEDUC2'], 'income': ['INDFMPIR'], 'BMI': ['BMXBMI'],
+          'education': ['DMDEDUC2'], 'BMI': ['BMXBMI'],
           'red_cells': ext.RED, 'white_cells_platelets': ext.WHITE,
           'all_CBC': ext.RED + ext.WHITE}
 SPECS = {'demographics_bmi_cbc': ext.PRIMARY['demographics_bmi_cbc'],

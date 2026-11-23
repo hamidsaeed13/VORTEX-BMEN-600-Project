@@ -3,7 +3,7 @@
   "participants": 4612,
   "positives": 106,
   "models": 2,
-  "blocks": 9,
+  "blocks": 8,
   "repeats": 20,
   "outer_folds": 5,
   "seed": 20261116,
@@ -18,8 +18,8 @@
   "independent_checks": [
     "saved baseline predictions and weights",
     "within-PSU donor membership and bijections",
-    "all 360 probability vectors and 1440 metric differences",
-    "all 72 importance summaries",
+    "all 320 probability vectors and 1280 metric differences",
+    "all 64 importance summaries",
     "protocol hash"
   ]
 }
