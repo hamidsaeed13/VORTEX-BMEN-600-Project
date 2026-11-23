@@ -1,4 +1,5 @@
 """Descriptive collinearity diagnostics and exploratory nested PCA comparison."""
+import argparse
 from pathlib import Path
 import json
 import hashlib
@@ -26,6 +27,12 @@ CBC = ext.RED + ext.WHITE  # current team-agreed 21-feature panel (study_config.
 # excluded MCH, MCHC, MPV, NRBC, basophil % and the five absolute differential counts.
 LEGACY_11 = ['LBXRBCSI', 'LBXHGB', 'LBXHCT', 'LBXMCVSI', 'LBXRDW',
              'LBXWBCSI', 'LBXPLTSI', 'LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT']
+
+# Phase 13 candidate. MCH and MCHC are derived from retained red-cell measures.
+# Absolute differential counts duplicate total WBC multiplied by each percentage.
+REDUNDANT_COLUMNS = {'LBXMCHSI', 'LBXMC', 'LBDLYMNO', 'LBDNENO', 'LBDMONO',
+                     'LBDEONO', 'LBDBANO'}
+CANDIDATE_14 = [column for column in CBC if column not in REDUNDANT_COLUMNS]
 
 
 class CheckedPCA(PCA):
@@ -63,26 +70,72 @@ def vif_table(frame, weights, block):
     return rows
 
 
-def build(pca):
+def build(pca, columns=CBC):
     if not pca:
-        return ext.build(ext.NUM + ['BMXBMI'] + CBC)
+        return ext.build(ext.NUM + ['BMXBMI'] + columns)
     pre = ColumnTransformer([
         ('numeric', Pipeline([('impute', SimpleImputer(strategy='median', add_indicator=True)),
                               ('scale', StandardScaler())]), ext.NUM + ['BMXBMI']),
         *cfg.categorical_transformer_entries(),  # nominal one-hot, education ordinal (team decision)
-        ('cbc', Pipeline([('scale', StandardScaler()), ('pca', CheckedPCA(n_components=.95, svd_solver='full'))]), CBC)])
+        ('cbc', Pipeline([('scale', StandardScaler()), ('pca', CheckedPCA(n_components=.95, svd_solver='full'))]), columns)])
     return Pipeline([('pre', pre), ('sparse', FunctionTransformer(csr_matrix, accept_sparse=True)),
                      ('clf', LogisticRegression(solver='liblinear', max_iter=2000))])
 
 
-def main():
+def matched_pca(d, models):
+    audit, records = [], []
+    outer = ext.folds_for(d)
+    for fold, (train, test) in enumerate(outer, 1):
+        inner = ext.folds_for(d.iloc[train], n=3, seed=420+fold)
+        for name, use_pca, columns in models:
+            def fit(indices, stage, heldout):
+                z = d.iloc[indices]
+                model = build(use_pca, columns)
+                model.fit(z, z.target, clf__sample_weight=z._weight / z._weight.mean())
+                if stage.startswith('inner_'):
+                    assert set(z.group).isdisjoint(d.iloc[test].group)
+                overlap = set(z.group) & set(d.iloc[heldout].group)
+                assert not overlap
+                info = dict(model=name, outer_fold=fold, stage=stage, train_n=len(z),
+                            heldout_n=len(heldout), group_overlap=len(overlap))
+                if use_pca:
+                    p = model.named_steps['pre'].named_transformers_['cbc'].named_steps['pca']
+                    assert p.n_samples_ == len(z)
+                    info.update(pca_fit_n=p.n_samples_, components=p.n_components_,
+                                retained_variance=float(p.explained_variance_ratio_.sum()))
+                audit.append(info)
+                return model
+            raw_inner = np.full(len(train), np.nan)
+            for k, (a, b) in enumerate(inner, 1):
+                model = fit(train[a], f'inner_{k}', train[b])
+                raw_inner[b] = model.predict_proba(d.iloc[train[b]])[:, 1]
+            z = d.iloc[train]
+            cal = LogisticRegression(solver='liblinear', C=1e6, max_iter=2000)
+            cal.fit(ext.logits(raw_inner), z.target, sample_weight=z._weight / z._weight.mean())
+            cut = ext.threshold(z.target.to_numpy(), cal.predict_proba(ext.logits(raw_inner))[:, 1], z._weight.to_numpy())
+            model = fit(train, 'outer', test)
+            raw = model.predict_proba(d.iloc[test])[:, 1]
+            p = cal.predict_proba(ext.logits(raw))[:, 1]
+            g = d.iloc[test][['SEQN', 'target', '_weight', 'SDMVSTRA', 'SDMVPSU']].copy()
+            g['model'] = name; g['fold'] = fold; g['raw'] = raw; g['calibrated'] = p
+            g['threshold'] = cut; g['flagged'] = p >= cut
+            g['constant'] = np.average(z.target, weights=z._weight)
+            records.append(g)
+        print(f'Outer fold {fold}/5 complete', flush=True)
+    return pd.concat(records, ignore_index=True), audit
+
+
+def main(vif_only=False):
     OUT.mkdir(parents=True, exist_ok=True)
     full, d = ext.load_cycle('L')
     assert len(d) == 4612 and d.target.sum() == 106
-    d[ext.CBC].corr().to_csv(OUT / 'cbc_correlations.csv')
     rows = vif_table(d[LEGACY_11], d._weight.to_numpy(), 'legacy_11')
     rows += vif_table(d[ext.CBC], d._weight.to_numpy(), 'full_21')
+    rows += vif_table(d[CANDIDATE_14], d._weight.to_numpy(), 'candidate_14')
     pd.DataFrame(rows).to_csv(OUT / 'cbc_vif.csv', index=False)
+    if vif_only:
+        return
+    d[ext.CBC].corr().to_csv(OUT / 'cbc_correlations.csv')
     differential = d[['LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT', 'LBXBAPCT']].sum(axis=1)
     relationships = {
         'differential_sum_min': float(differential.min()),
@@ -112,44 +165,10 @@ def main():
     axes[1].set(xlabel='PC1', ylabel='PC2', title='Whole-cohort view; not validation')
     axes[1].legend(fontsize=8)
     fig.tight_layout(); fig.savefig(OUT / 'cbc_pca_diagnostics.png', dpi=180); plt.close(fig)
-    audit, records = [], []
-    outer = ext.folds_for(d)
-    for fold, (train, test) in enumerate(outer, 1):
-        inner = ext.folds_for(d.iloc[train], n=3, seed=420+fold)
-        for name, use_pca in [('demographics_bmi_cbc', False), ('demographics_bmi_cbc_pca95', True)]:
-            def fit(indices, stage, heldout):
-                z = d.iloc[indices]
-                model = build(use_pca)
-                model.fit(z, z.target, clf__sample_weight=z._weight / z._weight.mean())
-                overlap = set(z.group) & set(d.iloc[heldout].group)
-                assert not overlap
-                info = dict(model=name, outer_fold=fold, stage=stage, train_n=len(z),
-                            heldout_n=len(heldout), group_overlap=len(overlap))
-                if use_pca:
-                    p = model.named_steps['pre'].named_transformers_['cbc'].named_steps['pca']
-                    assert p.n_samples_ == len(z)
-                    info.update(pca_fit_n=p.n_samples_, components=p.n_components_,
-                                retained_variance=float(p.explained_variance_ratio_.sum()))
-                audit.append(info)
-                return model
-            raw_inner = np.full(len(train), np.nan)
-            for k, (a, b) in enumerate(inner, 1):
-                model = fit(train[a], f'inner_{k}', train[b])
-                raw_inner[b] = model.predict_proba(d.iloc[train[b]])[:, 1]
-            z = d.iloc[train]
-            cal = LogisticRegression(solver='liblinear', C=1e6, max_iter=2000)
-            cal.fit(ext.logits(raw_inner), z.target, sample_weight=z._weight / z._weight.mean())
-            cut = ext.threshold(z.target.to_numpy(), cal.predict_proba(ext.logits(raw_inner))[:, 1], z._weight.to_numpy())
-            model = fit(train, 'outer', test)
-            raw = model.predict_proba(d.iloc[test])[:, 1]
-            p = cal.predict_proba(ext.logits(raw))[:, 1]
-            g = d.iloc[test][['SEQN', 'target', '_weight', 'SDMVSTRA', 'SDMVPSU']].copy()
-            g['model'] = name; g['fold'] = fold; g['raw'] = raw; g['calibrated'] = p
-            g['threshold'] = cut; g['flagged'] = p >= cut
-            g['constant'] = np.average(z.target, weights=z._weight)
-            records.append(g)
-        print(f'Outer fold {fold}/5 complete', flush=True)
-    pred = pd.concat(records, ignore_index=True)
+    pred, audit = matched_pca(d, [
+        ('demographics_bmi_cbc', False, CBC),
+        ('demographics_bmi_cbc_pca95', True, CBC),
+    ])
     pred.to_csv(OUT / 'pca_oof_predictions.csv', index=False)
     pd.DataFrame(audit).to_csv(OUT / 'pca_fit_audit.csv', index=False)
     summary = ext.summarise(pred, 'exploratory_phase7')
@@ -258,4 +277,7 @@ Team review and integration with the other cohort/endpoint proposals remain open
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--vif-only', action='store_true',
+                        help='Refresh the VIF table without refitting PCA models.')
+    main(vif_only=parser.parse_args().vif_only)

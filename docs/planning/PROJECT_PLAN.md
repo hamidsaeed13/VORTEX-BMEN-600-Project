@@ -270,7 +270,7 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
 
 ## Phase 15 — CBC feature reduction (blocking item before final model comparison)
 
-**Status (2026-11-23):** Not started. The team decided (cohort-summary table, same meeting as
+**Status (2026-11-23):** Steps 1–2 complete. The team decided (cohort-summary table, same meeting as
 the 21-feature CBC decision) that feature reduction happens as its own dedicated stage, not
 folded into the current 21-feature baseline. This phase exists to track that work explicitly so
 it isn't lost. Trigger/evidence: Phase 7's VIF check on the full 21-feature block found VIF up to
@@ -285,18 +285,26 @@ difference (0.8107 vs 0.8141), so compressing to components buys nothing and wou
 the resulting panel non-actionable (a lab can't "order less of" a PCA component). Reduction
 needs a supervised, name-preserving method instead.
 
-- [ ] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
+- [x] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
       before any data-driven selection: MCH, MCHC (implied by HGB/RBC/HCT already kept) and the
       five absolute differential counts (implied by WBC × percentage already kept). Re-run VIF
       (`cbc_diagnostics.py`) on the resulting ~14-feature set to confirm this brings VIF back down
-      toward the legacy-block range.
-- [ ] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
+      toward the legacy-block range. On the same 4,612 participants, median survey-weighted VIF
+      fell from 153.6 to 45.8 (legacy 11: 46.0), while the maximum stayed near 26,000
+      (25,982.8 to 25,896.5, both for neutrophil percentage). All five differential percentages
+      still sum to approximately 100%, leaving strong collinearity in that group.
+      The 14-feature panel is a candidate for Step 2. Reproduce the comparison with
+      `python scripts/analysis/cbc_diagnostics.py --vif-only` and see the
+      [per-feature VIF table](../../results/cbc_diagnostics/cbc_vif.csv).
+- [x] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
       regularization path (nested CV, development data only, matching the existing
       `weighted_calibration_analysis.py`/`research_extension.py` fold structure) to see which CBC
       coefficients survive at an AUROC-preserving penalty. Cross-check against the existing
       held-out permutation-importance results (`docs/findings/permutation_importance.md`) and VIF
       — a feature that's both low-importance and high-VIF is a strong drop candidate; a
       low-VIF/low-importance feature is a weaker one (drop for parsimony, not collinearity).
+      Nested Lasso retained 8–12 CBC terms per outer fit. Pooled weighted AUROC was
+      0.8158 versus 0.8107 for the full panel. See the [Step 2 findings](../findings/cbc_lasso_selection.md).
 - [ ] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
       a new canonical block in `study_config.py` (same pattern as `CBC_FEATURES`), with the
       rationale (which columns were dropped and why), the same way the 11→21 and 21→reduced
