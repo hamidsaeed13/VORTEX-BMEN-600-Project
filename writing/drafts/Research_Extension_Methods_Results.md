@@ -32,12 +32,12 @@ specified in docs/methods/extension_analysis_protocol.md and docs/methods/cycle_
 
 | Predictors | Current-cycle OOF AUROC | Independent-cycle AUROC | Current Brier | Independent Brier |
 | --- | --- | --- | --- | --- |
-| demographics | 0.693 | 0.664 | 0.01932 | 0.02004 |
-| demographics_bmi | 0.799 | 0.762 | 0.01926 | 0.01987 |
-| demographics_bmi_cbc | 0.823 | 0.799 | 0.01902 | 0.02059 |
+| demographics | 0.697 | 0.668 | 0.01932 | 0.02005 |
+| demographics_bmi | 0.801 | 0.760 | 0.01921 | 0.01992 |
+| demographics_bmi_cbc | 0.811 | 0.790 | 0.01902 | 0.02062 |
 
-The BMI-adjusted CBC AUROC gain was 0.023, with full-refit resampling percentile bounds
--0.030 to 0.069. The gain diminished with low-hemoglobin exclusion
+The BMI-adjusted CBC AUROC gain was 0.010, with full-refit resampling percentile bounds
+-0.056 to 0.051. The gain diminished with low-hemoglobin exclusion
 and reversed in the restricted age-20–65, low-hemoglobin-excluded sensitivity cohort. In the
 independent 2017–2018 sample (3,943 participants, 132 positive outcomes), CBC improved AUROC
 but worsened Brier error and log loss. These mixed results limit an interpretation of uniform

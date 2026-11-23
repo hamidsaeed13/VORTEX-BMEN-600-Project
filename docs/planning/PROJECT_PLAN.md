@@ -77,21 +77,27 @@ team population/endpoint decisions remain open. See [cohort analysis](../finding
 
 ## Phase 6 — Encoding categorical variables
 
-**Progress:** Notebooks 03–04 one-hot encode sex, race/ethnicity and education inside training
-folds, retaining all levels; notebook 02 retains its original exploratory encoding.
+**Progress (updated 2026-11-23):** The canonical encoding — one-hot for sex/race-ethnicity
+(nominal), ordinal for education (`DMDEDUC2` has a natural order) — is now centralized in
+`scripts/analysis/study_config.py` (`categorical_transformer_entries()`) and used by every
+official script (`cohort_analysis.py`, `weighted_calibration_analysis.py`,
+`research_extension.py`) and notebooks 03–04. Notebook 02 still uses its own, separate
+exploratory encoding (one-hot sex only; it doesn't model race/education/income at all) as a
+historical baseline, not the final pipeline. Ordinal vs. one-hot education gave no measurable
+AUROC difference in the original Phase 6 exploration (`notebooks/Phase 6.ipynb`); ordinal was
+adopted since it adds one feature instead of several sparse indicator columns.
 
 - [x] `sex` (`RIAGENDR`): one-hot encode inside folds; retain all levels with penalized logistic regression rather than require a dropped binary level
 - [x] `race_eth` (`RIDRETH3`): `OneHotEncoder(handle_unknown="ignore")` — nominal, nothing ordinal
       about it
-- [x] `education` (`DMDEDUC2`): one-hot encode in notebooks 03–06 to allow separate category
-      effects without assuming equally spaced ordered effects. The historical notebook 02
-      encoding is retained as an exploratory baseline, not the final pipeline.
+- [x] `education` (`DMDEDUC2`): ordinal-encode via `study_config.py` (team decision) to allow a
+      natural-order effect with one feature instead of several sparse indicator columns.
 - [x] Fit every encoder inside the training fold only, with `handle_unknown="ignore"` so an unseen
       category in held-out data doesn't break the pipeline
 
 ## Phase 7 — Collinearity check / PCA (diagnostic, not a replacement for raw features)
 
-**2026-11-16:** Implemented in [cbc_diagnostics.py](../../scripts/analysis/cbc_diagnostics.py), with [findings](../findings/cbc_diagnostics.md), VIF/correlation tables, descriptive scree/PC1–PC2 figure, and a matched nested 95%-variance PCA comparison. All preprocessing is fitted inside each training fold; basophil percentage is dropped. High VIF persists after that drop. MCH/MCHC are not in our predictor block.
+**2026-11-16, updated 2026-11-23:** Implemented in [cbc_diagnostics.py](../../scripts/analysis/cbc_diagnostics.py), with [findings](../findings/cbc_diagnostics.md), VIF/correlation tables, descriptive scree/PC1–PC2 figure, and a matched nested 95%-variance PCA comparison. All preprocessing is fitted inside each training fold. The CBC block now keeps all 21 variables (team decision 2026-11-23; see Phase 15), including basophil percentage, MCH, MCHC, MPV, NRBC and the five absolute differential counts, superseding the earlier 11-feature block this section originally described. VIF is now severe (up to ~26,000 for `LBXNEPCT`) versus ~808 under the legacy 11-feature block — driven by the differential percentages summing to ~100% plus the new near-exact identity `absolute count ≈ WBC total × percentage`. The raw-vs-PCA matched comparison still shows no meaningful AUROC difference (0.8107 vs 0.8141), reinforcing that PCA is a robustness check here, not a selection mechanism — see Phase 15 for the actual reduction plan.
 
 - [x] Compute correlation matrix + VIF on the numeric CBC block before deciding anything further
       (already have a correlation heatmap; extend to VIF)
@@ -112,14 +118,18 @@ folds, retaining all levels; notebook 02 retains its original exploratory encodi
 **Progress:** Notebook 04 uses WTPH2YR in classifiers, calibration and evaluation, with
 SDMVSTRA/SDMVPSU for grouped validation and conditional variance estimates. Fasting-glucose
 eligibility and weighting are implemented in notebook 05. See [weighted analysis](../findings/weighted_calibration_analysis.md).
-Notebook 03 (`survey_design.ipynb`, see [survey design decisions](../survey_design.md))
-independently confirms the same weight/design-variable choices on a separate analytic cohort
-(5,144 adults, not restricted to age 20+) and finds only 152 participants (2.5% weighted) reach
-HbA1c >= 6.5%, arguing for HbA1c >= 5.7% as the primary outcome; the weighted-calibration work
-in notebook 04 targets >= 6.5% on a 20+ cohort instead. This primary-outcome/cohort choice is
-still an open team decision, not just an implementation detail -- see
-[checklist audit](CHECKLIST_AUDIT.md) and [team review](../reviews/TEAM_REVIEW.md), which track
-this same disagreement across PRs 13-15.
+
+**Resolved (2026-11-20 team meeting):** the primary-outcome/cohort disagreement tracked in
+[checklist audit](CHECKLIST_AUDIT.md) and [team review](../reviews/TEAM_REVIEW.md) across PRs
+13-15 is settled. HbA1c >= 6.5% is the primary outcome, on an examined-adults-20+ cohort with
+an explicit "no" prior-diabetes diagnosis (borderline excluded), no insulin/diabetic-pill use,
+and pregnancy-clear status. These values now live in one place,
+`scripts/analysis/study_config.py`, which `research_extension.py`, `cohort_analysis.py`,
+`weighted_calibration_analysis.py`, `02_baseline_model_and_figures.ipynb` and
+`03_survey_design.ipynb` all read from, instead of each redefining its own copy. See
+[survey design decisions](../survey_design.md) for the resulting cohort (4,636/106 in notebook
+03; 4,619/106 in notebook 02; 4,612/106 in the official pipeline -- the small remaining gaps are
+a separate, still-open complete-CBC-panel modeling choice, not a disagreement over eligibility).
 
 - [x] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
 - [x] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
@@ -257,5 +267,55 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
       scikit-learn 1.6.1, SciPy 1.13.1 were used successfully)
 - [ ] Update stale statements in notebook 01 ("modeling packages not installed", "future notebook
       02") now that notebook 02 exists
+
+## Phase 15 — CBC feature reduction (blocking item before final model comparison)
+
+**Status (2026-11-23):** Not started. The team decided (cohort-summary table, same meeting as
+the 21-feature CBC decision) that feature reduction happens as its own dedicated stage, not
+folded into the current 21-feature baseline. This phase exists to track that work explicitly so
+it isn't lost. Trigger/evidence: Phase 7's VIF check on the full 21-feature block found VIF up to
+~25,983 (`LBXNEPCT`) and ~22,006 (`LBXLYPCT`) — roughly 30x worse than the legacy 11-feature
+block's worst case (~808) — driven by (a) the 5-part differential summing to ~100% and (b) the
+five absolute differential counts (`LBDLYMNO`, `LBDNENO`, `LBDMONO`, `LBDEONO`, `LBDBANO`) each
+being near-exactly `WBC total × percentage / 100` (correlation 0.78–0.9998 depending on cell
+type). MCH (`LBXMCHSI`) and MCHC (`LBXMC`) are also algebraically close to functions of
+hemoglobin/RBC/hematocrit already in the model. PCA was evaluated as a possible shortcut and
+rejected: the matched raw-vs-95%-PCA comparison in `cbc_diagnostics.py` shows no AUROC
+difference (0.8107 vs 0.8141), so compressing to components buys nothing and would also make
+the resulting panel non-actionable (a lab can't "order less of" a PCA component). Reduction
+needs a supervised, name-preserving method instead.
+
+- [ ] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
+      before any data-driven selection: MCH, MCHC (implied by HGB/RBC/HCT already kept) and the
+      five absolute differential counts (implied by WBC × percentage already kept). Re-run VIF
+      (`cbc_diagnostics.py`) on the resulting ~14-feature set to confirm this brings VIF back down
+      toward the legacy-block range.
+- [ ] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
+      regularization path (nested CV, development data only, matching the existing
+      `weighted_calibration_analysis.py`/`research_extension.py` fold structure) to see which CBC
+      coefficients survive at an AUROC-preserving penalty. Cross-check against the existing
+      held-out permutation-importance results (`docs/findings/permutation_importance.md`) and VIF
+      — a feature that's both low-importance and high-VIF is a strong drop candidate; a
+      low-VIF/low-importance feature is a weaker one (drop for parsimony, not collinearity).
+- [ ] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
+      a new canonical block in `study_config.py` (same pattern as `CBC_FEATURES`), with the
+      rationale (which columns were dropped and why), the same way the 11→21 and 21→reduced
+      decisions are now tracked here.
+- [ ] **Step 4 — head-to-head model comparison on the locked set.** Re-run the full pipeline
+      (`cohort_analysis.py`, `weighted_calibration_analysis.py`, `research_extension.py` and their
+      notebooks) with the reduced block, producing one comparison table across: age-only,
+      demographics, demographics+BMI, demographics+BMI+full-21-CBC (current baseline),
+      demographics+BMI+reduced-CBC — same folds/weights/calibration throughout so the comparison
+      is apples-to-apples. This directly answers whether reduction recovers some of the AUROC gain
+      lost to collinearity noise between the 11- and 21-feature stages (0.023→0.010 CBC-over-BMI
+      gain; see `docs/findings/research_extension_results.md`).
+- [ ] **Step 5 — expand the model comparison itself**, now that the feature set is settled: add
+      gradient boosting (already an open Phase 10 item) alongside the existing logistic/forest
+      pair, using the same matched folds/weights/calibration so it's comparable, not a new
+      one-off evaluation.
+- [ ] **Step 6 — final locked evaluation.** Once a model + feature set is chosen from Step 4/5,
+      reserve a genuinely untouched holdout (or confirm the nested-CV design already satisfies
+      this) for the final reported numbers — the folds used during Steps 1–5 have already been
+      inspected across many specs and cannot be relabelled an untouched test set.
 
 **2026-11-16 reconciliation:** Phase 4 cleaning is also addressed in Setayesh PR 15; Phase 8 and selected Phase 9 blocks in Ella PRs 13–14. Those branches use different eligibility/outcomes and are pending integration, so their tasks are not automatically marked complete here. See CHECKLIST_AUDIT.md. Phase 12 has an exploratory threshold procedure, but team justification and a final policy remain open. Phase 9 is a candidate menu, not a requirement to add every measured biomarker.

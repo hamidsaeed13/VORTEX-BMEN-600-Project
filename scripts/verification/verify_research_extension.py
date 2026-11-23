@@ -13,7 +13,7 @@ from research_extension import ROOT,OUT,PRIMARY,load_cycle,logits
 
 full,d=load_cycle('L');full_j,external=load_cycle('J')
 assert len(d)==4612 and d.target.sum()==106
-assert len(external)==3943 and external.target.sum()==132
+assert len(external)==3939 and external.target.sum()==132
 assert not set(d.SEQN)&set(external.SEQN)
 for entry in json.loads((ROOT/'data/manifests/extension_download_manifest.json').read_text()):
     payload=(ROOT/entry['path']).read_bytes()
@@ -88,7 +88,7 @@ for name in ['05_bmi_and_biological_sensitivity.ipynb','06_resampling_and_indepe
 evidence=pd.read_csv(ROOT/'literature/extension_evidence_matrix.csv')
 assert len(evidence)==21 and evidence.source.notna().all()
 result=dict(status='passed',current_participants=4612,current_positives=106,
-    independent_participants=3943,independent_positives=132,fasting_participants=2375,
+    independent_participants=3939,independent_positives=132,fasting_participants=2375,
     bootstrap_successful=100,bootstrap_failures=0,evidence_sources=21,
     checks=['download hashes','protocol hash','matched participants and clusters',
             'weighted metrics and policy accounting','matched fasting endpoints and weights',

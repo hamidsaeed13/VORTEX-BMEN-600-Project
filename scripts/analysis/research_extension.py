@@ -19,22 +19,22 @@ from scipy.special import logit
 from scipy.stats import t
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
+from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score, log_loss
 import joblib
+import study_config as cfg
 
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'results/research_extension'
-CBC=['LBXWBCSI','LBXRBCSI','LBXHGB','LBXHCT','LBXMCVSI','LBXRDW','LBXPLTSI',
-     'LBXLYPCT','LBXNEPCT','LBXMOPCT','LBXEOPCT','LBXBAPCT']
-RED=['LBXRBCSI','LBXHGB','LBXHCT','LBXMCVSI','LBXRDW']
-WHITE=['LBXWBCSI','LBXPLTSI','LBXLYPCT','LBXNEPCT','LBXMOPCT','LBXEOPCT']
-NUM=['RIDAGEYR','INDFMPIR']
-CAT=['RIAGENDR','RIDRETH3','DMDEDUC2']
+CBC=cfg.COMPLETE_PANEL_FEATURES
+RED=cfg.RED_CELL_FEATURES
+WHITE=cfg.WHITE_CELL_PLATELET_FEATURES
+NUM=cfg.NUMERIC_DEMOGRAPHICS
+CAT=cfg.CATEGORICAL_DEMOGRAPHICS
 PRIMARY={'demographics':(NUM,False),'demographics_bmi':(NUM+['BMXBMI'],False),
          'demographics_bmi_cbc':(NUM+['BMXBMI']+RED+WHITE,False)}
 BLOCKS={'demographics_bmi_red':(NUM+['BMXBMI']+RED,False),
@@ -62,11 +62,8 @@ def load_cycle(cycle):
     x['DMDEDUC2']=x.DMDEDUC2.replace({7:np.nan,9:np.nan})
     x['_weight']=x['WTPH2YR' if cycle=='L' else 'WTMEC2YR']
     x['group']=x.SDMVSTRA.astype(int).astype(str)+':'+x.SDMVPSU.astype(int).astype(str)
-    x['target']=x.LBXGH.ge(6.5).astype(int)
-    band=x.RIAGENDR.eq(2)&x.RIDAGEYR.between(20,44)
-    x['eligible_before_labs']=(x.RIDSTATR.eq(2)&x._weight.gt(0)&x.RIDAGEYR.ge(20)
-        &x.DIQ010.eq(2)&~x.DIQ050.eq(1)&~x.DIQ070.eq(1)&~x.RIDEXPRG.eq(1)
-        &(~band|x.RIDEXPRG.eq(2)))
+    x['target']=x.LBXGH.ge(cfg.PRIMARY_CUT).astype(int)
+    x['eligible_before_labs']=cfg.eligibility_mask(x, weight_col='_weight')
     keep=x.eligible_before_labs&x[['LBXGH']+CBC].notna().all(axis=1)
     d=x.loc[keep].reset_index(drop=True)
     d['low_hgb']=(d.RIAGENDR.eq(2)&d.LBXHGB.lt(12))|(d.RIAGENDR.eq(1)&d.LBXHGB.lt(13))
@@ -83,8 +80,7 @@ def folds_for(d,n=5,seed=42):
 def build(nums,forest=False):
     pre=ColumnTransformer([
         ('numeric',Pipeline([('impute',SimpleImputer(strategy='median',add_indicator=True)),('scale',StandardScaler())]),nums),
-        ('categorical',Pipeline([('impute',SimpleImputer(strategy='most_frequent')),
-            ('encode',OneHotEncoder(handle_unknown='ignore',sparse_output=False))]),CAT)])
+        *cfg.categorical_transformer_entries()])
     clf=(RandomForestClassifier(n_estimators=300,min_samples_leaf=5,random_state=42,n_jobs=1)
          if forest else LogisticRegression(solver='liblinear',max_iter=2000))
     steps=[('pre',pre)]

@@ -9,21 +9,21 @@ import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
+from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from scipy.sparse import csr_matrix
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, roc_curve
+import study_config as cfg
 
 ROOT = next(p for p in [Path.cwd(), *Path.cwd().parents] if (p / 'CODEX.md').is_file())
 RAW = ROOT / 'data/raw/2021_2023'
 OUT = ROOT / 'results/cohort'
 OUT.mkdir(parents=True, exist_ok=True)
-cbc_vars = ['LBXWBCSI', 'LBXRBCSI', 'LBXHGB', 'LBXHCT', 'LBXMCVSI', 'LBXRDW',
-            'LBXPLTSI', 'LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT', 'LBXBAPCT']
-numeric = ['RIDAGEYR', 'INDFMPIR']
-categorical = ['RIAGENDR', 'RIDRETH3', 'DMDEDUC2']
+cbc_vars = cfg.COMPLETE_PANEL_FEATURES
+numeric = cfg.NUMERIC_DEMOGRAPHICS
+categorical = cfg.CATEGORICAL_DEMOGRAPHICS
 
 def load(name):
     frame = pd.read_sas(RAW / (name + '_L.xpt'), format='xport')
@@ -40,17 +40,17 @@ df = df.merge(diq[['SEQN', 'DIQ010', 'DIQ050', 'DIQ070']], on='SEQN', how='left'
 assert len(df) == len(demo)
 df['DMDEDUC2'] = df.DMDEDUC2.replace({7: np.nan, 9: np.nan})
 df['diagnosis_status'] = df.DIQ010.map({1: 'yes', 2: 'no', 3: 'borderline', 7: 'refused', 9: 'unknown'}).fillna('missing')
-df['target'] = (df.LBXGH >= 6.5).astype(int)
+df['target'] = (df.LBXGH >= cfg.PRIMARY_CUT).astype(int)
 complete = df[['LBXGH'] + cbc_vars].notna().all(axis=1)
-adult = df.RIDAGEYR >= 20
-no_dx = df.DIQ010.eq(2)
+adult = df.RIDAGEYR >= cfg.MIN_AGE
+no_dx = df.DIQ010.eq(cfg.NO_PRIOR_DIAGNOSIS_CODE)
 no_meds = ~df.DIQ050.eq(1) & ~df.DIQ070.eq(1)
 # Missing medication answers are skips/unknown, not proof of no medication.
 # Pregnancy data are public only for females aged 20–44. Outside that band,
 # absence of a pregnancy record must not be described as confirmed nonpregnant.
-preg_band = df.RIAGENDR.eq(2) & df.RIDAGEYR.between(20, 44)
+preg_band = df.RIAGENDR.eq(cfg.PREGNANCY_BAND_SEX) & df.RIDAGEYR.between(*cfg.PREGNANCY_BAND_AGE)
 preg_ok = ~df.RIDEXPRG.eq(1) & (~preg_band | df.RIDEXPRG.eq(2))
-eligible = df.RIDSTATR.eq(2) & df.WTPH2YR.gt(0)
+eligible = df.RIDSTATR.eq(cfg.REQUIRE_EXAM_STATUS) & df.WTPH2YR.gt(0)
 
 flow = []
 mask = pd.Series(True, index=df.index)
@@ -61,7 +61,7 @@ for label, condition in [
     ('Explicit no prior diagnosis (DIQ010=2)', no_dx),
     ('No reported current insulin/diabetes pills', no_meds),
     ('Exclude recorded pregnancy and indeterminate pregnancy in females 20–44', preg_ok),
-    ('Observed HbA1c and complete 12-variable CBC', complete),
+    ('Observed HbA1c and complete 21-variable CBC', complete),
 ]:
     before = int(mask.sum())
     mask &= condition
@@ -77,7 +77,8 @@ cohorts = {
     'sensitivity_age18_no_diagnosis': complete & (df.RIDAGEYR >= 18) & eligible & no_dx & no_meds & preg_ok,
     'sensitivity_age35_70_no_diagnosis': primary & df.RIDAGEYR.between(35, 70),
     'sensitivity_age65plus_no_diagnosis': primary & (df.RIDAGEYR >= 65),
-    'sensitivity_include_borderline': complete & adult & eligible & preg_ok & no_meds & df.DIQ010.isin([2, 3]),
+    'sensitivity_include_borderline': complete & adult & eligible & preg_ok & no_meds
+        & df.DIQ010.isin([cfg.NO_PRIOR_DIAGNOSIS_CODE, cfg.BORDERLINE_DIAGNOSIS_CODE]),
 }
 summary = []
 for name, keep in cohorts.items():
@@ -106,9 +107,7 @@ def make_model(nums, cats, forest=False):
     transforms = [('numeric', Pipeline([('impute', SimpleImputer(strategy='median')),
                                         ('scale', StandardScaler())]), nums)]
     if cats:
-        transforms.append(('categorical', Pipeline([
-            ('impute', SimpleImputer(strategy='most_frequent')),
-            ('encode', OneHotEncoder(handle_unknown='ignore', sparse_output=False))]), cats))
+        transforms += cfg.categorical_transformer_entries()
     clf = (RandomForestClassifier(n_estimators=300, min_samples_leaf=5,
                                   class_weight='balanced', random_state=42, n_jobs=1)
            if forest else LogisticRegression(class_weight='balanced', solver='liblinear', max_iter=2000))
