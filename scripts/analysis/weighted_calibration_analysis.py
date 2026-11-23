@@ -18,20 +18,20 @@ from scipy.stats import t as student_t
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
+from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, log_loss
+import study_config as cfg
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'results/weighted_calibration'
 OUT.mkdir(parents=True, exist_ok=True)
 RAW = ROOT / 'data/raw/2021_2023'
-CBC = ['LBXWBCSI', 'LBXRBCSI', 'LBXHGB', 'LBXHCT', 'LBXMCVSI', 'LBXRDW',
-       'LBXPLTSI', 'LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT', 'LBXBAPCT']
-NUM = ['RIDAGEYR', 'INDFMPIR']
-CAT = ['RIAGENDR', 'RIDRETH3', 'DMDEDUC2']
+CBC = cfg.COMPLETE_PANEL_FEATURES
+NUM = cfg.NUMERIC_DEMOGRAPHICS
+CAT = cfg.CATEGORICAL_DEMOGRAPHICS
 
 def read(name):
     d = pd.read_sas(RAW / f'{name}_L.xpt', format='xport')
@@ -46,13 +46,9 @@ full = full.merge(cbc[['SEQN'] + CBC], on='SEQN', how='left', validate='one_to_o
 full = full.merge(diq[['SEQN', 'DIQ010', 'DIQ050', 'DIQ070']], on='SEQN', how='left', validate='one_to_one')
 assert len(full) == len(demo)
 full['DMDEDUC2'] = full.DMDEDUC2.replace({7: np.nan, 9: np.nan})
-preg_band = full.RIAGENDR.eq(2) & full.RIDAGEYR.between(20, 44)
-keep = (full.RIDSTATR.eq(2) & full.WTPH2YR.gt(0) & full.RIDAGEYR.ge(20)
-        & full.DIQ010.eq(2) & ~full.DIQ050.eq(1) & ~full.DIQ070.eq(1)
-        & ~full.RIDEXPRG.eq(1) & (~preg_band | full.RIDEXPRG.eq(2))
-        & full[['LBXGH'] + CBC].notna().all(axis=1))
+keep = cfg.eligibility_mask(full) & full[['LBXGH'] + CBC].notna().all(axis=1)
 d = full.loc[keep].reset_index(drop=True)
-y = d.LBXGH.ge(6.5).astype(int).to_numpy()
+y = d.LBXGH.ge(cfg.PRIMARY_CUT).astype(int).to_numpy()
 w = d.WTPH2YR.to_numpy()
 assert len(d) == 4612 and y.sum() == 106
 previous = ROOT / 'results/cohort/cohort_oof_predictions.csv'
@@ -75,8 +71,7 @@ def make_model(nums, cats, forest):
     transform = [('num', Pipeline([('impute', SimpleImputer(strategy='median')),
                                   ('scale', StandardScaler())]), nums)]
     if cats:
-        transform.append(('cat', Pipeline([('impute', SimpleImputer(strategy='most_frequent')),
-            ('encode', OneHotEncoder(handle_unknown='ignore', sparse_output=False))]), cats))
+        transform += cfg.categorical_transformer_entries()
     steps = [('pre', ColumnTransformer(transform))]
     if not forest:
         steps.append(('sparse', FunctionTransformer(csr_matrix, accept_sparse=True)))

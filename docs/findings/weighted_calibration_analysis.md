@@ -9,12 +9,12 @@ Table 1 compares calibrated outer-fold predictions from four prespecified models
 | Model | Weighted AUROC | Conditional 95% interval | Average precision | Brier | Mean risk |
 | --- | --- | --- | --- | --- | --- |
 | age_logistic | 0.652 | 0.601–0.702 | 0.033 | 0.01939 | 1.97% |
-| demographics_logistic | 0.715 | 0.650–0.779 | 0.046 | 0.01929 | 1.99% |
-| cbc_demographics_logistic | 0.781 | 0.714–0.848 | 0.073 | 0.01904 | 1.99% |
-| cbc_demographics_forest | 0.735 | 0.691–0.779 | 0.047 | 0.01925 | 2.01% |
+| demographics_logistic | 0.720 | 0.662–0.778 | 0.045 | 0.01929 | 1.99% |
+| cbc_demographics_logistic | 0.786 | 0.726–0.846 | 0.071 | 0.01906 | 1.99% |
+| cbc_demographics_forest | 0.723 | 0.667–0.779 | 0.049 | 0.01924 | 2.01% |
 
 CBC logistic minus demographics logistic weighted AUROC is 0.066,
-with a paired conditional design interval of -0.001 to 0.134.
+with a paired conditional design interval of -0.007 to 0.138.
 The interval includes zero: these results suggest incremental discrimination but do not clearly
 resolve the gain at this uncertainty level. Average precision should be read against the
 weighted prevalence of about 0.020; high overall accuracy or NPV alone is uninformative here.
@@ -77,9 +77,9 @@ learning procedure, not a single deployable cutoff.
 | Model | Weighted sensitivity | Weighted NPV | Weighted deferred % | Observed deferred N | Observed positives missed |
 | --- | --- | --- | --- | --- | --- |
 | age_logistic | 0.935 | 0.9949 | 25.1 | 788 | 4 |
-| cbc_demographics_forest | 0.963 | 0.9973 | 27.7 | 1105 | 6 |
-| cbc_demographics_logistic | 0.958 | 0.9969 | 27.2 | 1013 | 3 |
-| demographics_logistic | 0.940 | 0.9953 | 25.3 | 860 | 4 |
+| cbc_demographics_forest | 0.970 | 0.9975 | 23.6 | 916 | 4 |
+| cbc_demographics_logistic | 0.958 | 0.9976 | 34.6 | 1361 | 3 |
+| demographics_logistic | 0.976 | 0.9979 | 22.9 | 817 | 2 |
 
 All observed miss counts use the same 106 positive participants. Weighted sensitivity and
 weighted deferred percentages do not equal raw count ratios. The policy CSV includes raw

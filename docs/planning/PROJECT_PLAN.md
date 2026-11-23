@@ -112,14 +112,18 @@ folds, retaining all levels; notebook 02 retains its original exploratory encodi
 **Progress:** Notebook 04 uses WTPH2YR in classifiers, calibration and evaluation, with
 SDMVSTRA/SDMVPSU for grouped validation and conditional variance estimates. Fasting-glucose
 eligibility and weighting are implemented in notebook 05. See [weighted analysis](../findings/weighted_calibration_analysis.md).
-Notebook 03 (`survey_design.ipynb`, see [survey design decisions](../survey_design.md))
-independently confirms the same weight/design-variable choices on a separate analytic cohort
-(5,144 adults, not restricted to age 20+) and finds only 152 participants (2.5% weighted) reach
-HbA1c >= 6.5%, arguing for HbA1c >= 5.7% as the primary outcome; the weighted-calibration work
-in notebook 04 targets >= 6.5% on a 20+ cohort instead. This primary-outcome/cohort choice is
-still an open team decision, not just an implementation detail -- see
-[checklist audit](CHECKLIST_AUDIT.md) and [team review](../reviews/TEAM_REVIEW.md), which track
-this same disagreement across PRs 13-15.
+
+**Resolved (2026-11-20 team meeting):** the primary-outcome/cohort disagreement tracked in
+[checklist audit](CHECKLIST_AUDIT.md) and [team review](../reviews/TEAM_REVIEW.md) across PRs
+13-15 is settled. HbA1c >= 6.5% is the primary outcome, on an examined-adults-20+ cohort with
+an explicit "no" prior-diabetes diagnosis (borderline excluded), no insulin/diabetic-pill use,
+and pregnancy-clear status. These values now live in one place,
+`scripts/analysis/study_config.py`, which `research_extension.py`, `cohort_analysis.py`,
+`weighted_calibration_analysis.py`, `02_baseline_model_and_figures.ipynb` and
+`03_survey_design.ipynb` all read from, instead of each redefining its own copy. See
+[survey design decisions](../survey_design.md) for the resulting cohort (4,636/106 in notebook
+03; 4,619/106 in notebook 02; 4,612/106 in the official pipeline -- the small remaining gaps are
+a separate, still-open complete-CBC-panel modeling choice, not a disagreement over eligibility).
 
 - [x] Apply `WTPH2YR` for CBC/HbA1c analyses, `WTSAF2YR` (with eligibility) for fasting glucose
 - [x] Preserve `SDMVSTRA`/`SDMVPSU` for design-aware uncertainty
