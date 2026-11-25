@@ -1,0 +1,15 @@
+{
+  "status": "SPENT -- do not reuse this holdout for further model selection",
+  "holdout_seed": 99912601,
+  "n_development": 3407,
+  "n_holdout": 1205,
+  "positives_development": 77,
+  "positives_holdout": 29,
+  "development_weighted_prevalence": 0.021163784998463463,
+  "models_evaluated": [
+    "demographics_bmi_cbc",
+    "demographics_bmi_cbc_adaboost",
+    "demographics_bmi_cbc_ensemble"
+  ],
+  "note": "Development-only 3-fold inner calibration/threshold selection (95% weighted-sensitivity target), matching the inner-fold convention used throughout research_extension.py. The holdout itself was never touched during fitting, calibration or threshold selection."
+}

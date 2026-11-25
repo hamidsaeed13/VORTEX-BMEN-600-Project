@@ -64,6 +64,44 @@ def main():
         gains.append([analysis,int(z.loc['demographics_bmi','n']),int(z.loc['demographics_bmi','positives']),
                       f'{z.loc["demographics_bmi","AUROC"]:.3f}',f'{z.loc["demographics_bmi_cbc","AUROC"]:.3f}',f'{gain:+.3f}'])
     sensitivity_table=md(['Analysis','N','Positives','BMI baseline AUROC','BMI+CBC AUROC','CBC gain'],gains)
+    # Phase 15 Step 5: full model-family comparison (logistic/forest/gbm), current cycle only --
+    # forest and gbm variants are not frozen/transported to the independent cycle (Table 1 stays
+    # PRIMARY-only, logistic, for that reason), so this is a separate, clearly-scoped table.
+    family_order=['demographics','demographics_bmi','demographics_bmi_cbc',
+                  'demographics_bmi_red','demographics_bmi_white_platelet',
+                  'demographics_bmi_forest','demographics_bmi_cbc_forest',
+                  'demographics_bmi_gbm','demographics_bmi_cbc_gbm',
+                  'demographics_bmi_adaboost','demographics_bmi_cbc_adaboost',
+                  'demographics_bmi_svm','demographics_bmi_cbc_svm',
+                  'demographics_bmi_nb','demographics_bmi_cbc_nb',
+                  'demographics_bmi_cbc_ensemble']
+    family=results[results.analysis.eq('primary')].set_index('model')
+    family_table=md(['Model','AUROC','AP','Brier'],
+        [[name,f'{family.loc[name,"AUROC"]:.3f}',f'{family.loc[name,"AP"]:.3f}',f'{family.loc[name,"Brier"]:.5f}']
+         for name in family_order if name in family.index])
+    # SVM hyperparameter sensitivity: a small, pre-specified set reported in full (not
+    # searched-and-selected) -- see scripts/analysis/research_extension.py's SVM_SENSITIVITY.
+    svm_sens=pd.read_csv(OUT/'svm_sensitivity_summary.csv')
+    svm_sens=svm_sens[svm_sens.stage.eq('calibrated')].set_index('model')
+    svm_order=['demographics_bmi_cbc_svm','demographics_bmi_cbc_svm_balanced',
+              'demographics_bmi_cbc_svm_c10','demographics_bmi_cbc_svm_c100_g1']
+    svm_table=md(['Configuration','AUROC','AP','Brier'],
+        [[name,f'{svm_sens.loc[name,"AUROC"]:.3f}',f'{svm_sens.loc[name,"AP"]:.3f}',f'{svm_sens.loc[name,"Brier"]:.5f}']
+         for name in svm_order if name in svm_sens.index])
+    # Class-balancing sensitivity: every model family, unbalanced vs. a class-balance sample
+    # weight multiplied in uniformly (see CLASS_BALANCE_SENSITIVITY). Not part of Table 1b.
+    cb_sens=pd.read_csv(OUT/'class_balance_sensitivity_summary.csv')
+    cb_sens=cb_sens[cb_sens.stage.eq('calibrated')].set_index('model')
+    cb_pairs=[('Logistic','demographics_bmi_cbc','demographics_bmi_cbc_logistic_cb'),
+             ('Forest','demographics_bmi_cbc_forest','demographics_bmi_cbc_forest_cb'),
+             ('Gradient boosting','demographics_bmi_cbc_gbm','demographics_bmi_cbc_gbm_cb'),
+             ('AdaBoost','demographics_bmi_cbc_adaboost','demographics_bmi_cbc_adaboost_cb'),
+             ('SVM','demographics_bmi_cbc_svm','demographics_bmi_cbc_svm_cb'),
+             ('Naive Bayes','demographics_bmi_cbc_nb','demographics_bmi_cbc_nb_cb')]
+    cb_table=md(['Model','Unbalanced AUROC','Class-balanced AUROC','Delta'],
+        [[label,f'{cb_sens.loc[unb,"AUROC"]:.3f}',f'{cb_sens.loc[bal,"AUROC"]:.3f}',
+          f'{cb_sens.loc[bal,"AUROC"]-cb_sens.loc[unb,"AUROC"]:+.3f}']
+         for label,unb,bal in cb_pairs if unb in cb_sens.index and bal in cb_sens.index])
     boot_gain=intervals[intervals.model.eq('CBC_minus_BMI_AUROC')].iloc[0]
     pi=primary.set_index('model');ei=ext.set_index('model')
     gain=pi.loc['demographics_bmi_cbc','AUROC']-pi.loc['demographics_bmi','AUROC']
@@ -133,6 +171,109 @@ the outer/inner splits and hyperparameters are fixed, there are only 15 variance
 and 100 resamples give limited tail precision. The code supports increasing --bootstrap
 for a higher-precision follow-up; coverage is not validated for this rare-event learning
 procedure. Duplicate sampled records retain their original fold assignment to prevent leakage.
+
+### Table 1b. Model family comparison (current cycle only, Phase 15 Step 5)
+
+{family_table}
+
+Six additional model families (scikit-learn `GradientBoostingClassifier`, `AdaBoostClassifier`,
+`SVC` with an RBF kernel, and `GaussianNB`, each fit on both the BMI-only and BMI+CBC feature
+sets) were added alongside the existing logistic/forest pair, through the same matched folds,
+survey weights and development-only calibration as every other model here. All must support
+`sample_weight` in `fit()` to match this project's population-risk (no class-balancing)
+convention; `KNeighborsClassifier` does not and was excluded for that reason rather than fit
+unweighted and left incomparable.
+
+On this cohort, **properly regularized logistic regression outperforms every other model
+family tested.** AdaBoost is the strongest alternative (0.821 AUROC with CBC, versus logistic's
+0.835) and clearly beats both gradient boosting (0.801) and random forest (0.781) — a genuinely
+informative result, since AdaBoost's reweighting-based boosting is mechanically different from
+gradient boosting's residual-fitting approach. RBF-kernel SVM and Naive Bayes perform
+substantially worse (0.692 and 0.681 with CBC; SVM alone drops to 0.568 without it) — both used
+scikit-learn defaults, with no hyperparameter tuning, matching this file's stated discipline of
+not selecting hyperparameters from results; SVM in particular is known to need tuned
+regularization/kernel-width for imbalanced tabular data like this ~2.3%-prevalence cohort, so
+this reflects untuned defaults, not a ceiling on what RBF SVM could achieve here.
+
+This overall pattern — simpler, regularized linear models matching or beating every more
+flexible alternative — is consistent with the signal here being close to linear and already
+well-captured by the CBC feature-reduction work (Phase 15): added model flexibility does not
+recover additional discrimination on ~4,600 rows with 106 events. None of these additional
+model families are frozen/transported to the independent 2017–2018 cycle (Table 1 above is
+logistic-only, `demographics`/`demographics_bmi`/`demographics_bmi_cbc`, for that reason) or
+included in the 100-replicate bootstrap.
+
+### Table 1c. SVM hyperparameter sensitivity (exploratory; not part of the headline comparison)
+
+{svm_table}
+
+Default RBF SVM (`C=1`, `gamma='scale'`, no class weighting) underperformed every other model
+family in Table 1b. A prior, unrelated project's notebook (not part of this pipeline) found
+`class_weight='balanced'` plus grid-searched `C=100, gamma=1` dramatically improved its own SVM.
+To check whether the same levers help here, without grid-searching this project's own data (which
+would violate this file's stated no-hyperparameter-selection-from-results discipline), a small,
+pre-specified set of configurations was run through the identical matched folds/weights/
+calibration and reported in full rather than searched-and-selected:
+
+- **Class balancing alone helps substantially** (0.692 → 0.769 AUROC) — the untuned default's
+  poor performance was partly a class-imbalance artifact fixable without touching the kernel.
+- **Mildly increasing `C` without changing `gamma`** (`C=10`, `gamma='scale'`, class-balanced)
+  barely moves the needle (0.702) — far short of `class_weight='balanced'` alone.
+- **Directly porting the other project's winning configuration** (`C=100`, `gamma=1`,
+  class-balanced) is actively harmful here (AUROC 0.445, worse than chance) — that
+  hyperparameter pair was tuned for a different dataset's scale and dimensionality, and a
+  `gamma=1` RBF kernel badly overfits this feature space. This is exactly the failure mode the
+  no-grid-search discipline guards against: a hyperparameter pair that looks like a clear win
+  elsewhere can be actively destructive on different data, so it is reported as a cautionary
+  data point here, not adopted. None of these four configurations replace
+  `demographics_bmi_cbc_svm`'s default hyperparameters in Table 1b or anywhere else in this
+  pipeline; this table is exploratory evidence, not a selected best model.
+
+### Table 1d. Class-balancing sensitivity, all model families (exploratory; not part of the headline comparison)
+
+{cb_table}
+
+Every model family in Table 1b was refit with a class-balance sample weight (sklearn's
+`'balanced'` formula, `n_samples / (n_classes * class_count)`) multiplied into the existing
+survey weight — the same single mechanism applied identically across all six, so it works even
+for model types with no native `class_weight` parameter (gradient boosting, AdaBoost, Naive
+Bayes). This directly answers "does class balancing help" for the whole comparison, not just
+SVM. The effect is highly model-dependent: **SVM improves dramatically** (+0.074 AUROC,
+consistent with the native-`class_weight='balanced'` result in Table 1c above — two different
+implementations of the same idea agree) and **random forest improves meaningfully** (+0.019);
+gradient boosting improves modestly (+0.005); logistic regression, AdaBoost and Naive Bayes are
+essentially unchanged (within ±0.003, i.e. noise). A plausible explanation: margin- and
+distance-based methods (SVM) and models that partition the training sample empirically (forest)
+are more sensitive to a skewed training prevalence than models already built around resampling-
+based reweighting (AdaBoost's native update rule) or explicit likelihood/prior estimation
+(logistic's MLE, Naive Bayes' own class-prior modeling) — but this is a plausible interpretation
+of these six numbers, not a mechanism verified here. As with Table 1c, none of these
+balanced variants replace any model's default fitting in Table 1b or elsewhere in this pipeline.
+
+### Logistic vs. AdaBoost vs. their ensemble: is the ranking in Table 1b real?
+
+A soft-voting ensemble of logistic regression and AdaBoost (`demographics_bmi_cbc_ensemble`,
+same matched folds/weights/calibration) was added to Table 1b and to the 100-replicate PSU
+bootstrap alongside the three `PRIMARY` models. Point estimates suggest a ranking — ensemble
+(0.846) > logistic (0.835) > AdaBoost (0.821) — but paired bootstrap intervals for the gaps
+tell a more cautious story:
+
+| Comparison | 95% interval |
+| --- | --- |
+| Logistic − AdaBoost | −0.042 to 0.101 (includes zero) |
+| Ensemble − Logistic | −0.058 to 0.046 (includes zero) |
+| Ensemble − AdaBoost | **0.003 to 0.065** (excludes zero, barely) |
+
+**Only the ensemble-vs-AdaBoost gap is distinguishable from resampling noise, and only just** (the
+lower bound is 0.003). Logistic and AdaBoost are not reliably separable from each other, nor is
+the ensemble reliably separable from logistic alone. This is reinforced by the Phase 15 Step 6
+final locked holdout (`docs/findings/final_holdout_evaluation.md`): on a single genuinely
+untouched split (1,205 participants, 29 positive events, never used in any fold decision
+before), **AdaBoost actually outperformed logistic** (0.829 vs. 0.766 AUROC, 100% vs. 90.2%
+weighted sensitivity) — the reverse of the nested-CV point estimate. Taken together, the honest
+conclusion is that logistic, AdaBoost and their ensemble perform comparably on this cohort size,
+and this project does not have enough events (106 in the primary cohort) to confidently declare
+a single best model among them.
 
 ### Table 2. Sensitivity and endpoint comparisons
 

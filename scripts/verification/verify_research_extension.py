@@ -23,7 +23,7 @@ metadata=json.loads((OUT/'extension_metadata.json').read_text())
 assert metadata['protocol_sha256']==hashlib.sha256((ROOT/'docs/methods/extension_analysis_protocol.md').read_bytes()).hexdigest()
 comparison=pd.read_csv(OUT/'extension_model_comparison.csv')
 pred=pd.read_csv(OUT/'primary_extension_predictions.csv')
-assert len(pred)==len(d)*7 and not pred.duplicated(['SEQN','model']).any()
+assert len(pred)==len(d)*16 and not pred.duplicated(['SEQN','model']).any()  # PRIMARY(3)+BLOCKS(2)+FORESTS(2)+GBMS(2)+OTHERS(6: svm/adaboost/nb x2)+ENSEMBLE(1)
 assert pred.groupby(['model','SDMVSTRA','SDMVPSU']).fold.nunique().eq(1).all()
 assert pred.groupby('SEQN').fold.nunique().eq(1).all()
 assert pred.groupby('model').target.sum().eq(106).all()
@@ -56,7 +56,7 @@ for name,g in fg.groupby('model'):
 assert ha.groupby('model').target.sum().eq(60).all()
 
 boot=pd.read_csv(OUT/'full_refit_bootstrap_replicates.csv')
-assert len(boot)==300 and boot.replicate.nunique()==100
+assert len(boot)==500 and boot.replicate.nunique()==100  # PRIMARY(3)+adaboost(1)+ensemble(1), x100 replicates
 assert not boot.duplicated(['replicate','model']).any()
 assert json.loads((OUT/'bootstrap_failures.json').read_text())==[]
 interval=pd.read_csv(OUT/'full_refit_bootstrap_intervals.csv')

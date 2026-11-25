@@ -18,6 +18,9 @@ Install `requirements.txt` at the project root. From that root:
 | Verify organization-only changes against the research commit | `python scripts/verification/verify_organization.py` | `docs/verification/organization_validation.json` |
 | Render contributor review tabs | `python scripts/reporting/render_team_review.py` | `docs/reviews/TEAM_REVIEW.html` from the Markdown review |
 | CBC/demographic feature-reduction exploration (Phase 15) | `python scripts/analysis/feature_reduction.py` | `results/feature_reduction/`, [findings](../docs/findings/feature_reduction.md) |
+| Biomarker expansion screen (Phase 9, exploratory) | `python scripts/analysis/biomarker_expansion.py` | `results/biomarker_expansion/`, [findings](../docs/findings/biomarker_expansion.md) |
+| Final locked holdout evaluation (Phase 15 Step 6 — **spent, do not rerun with new specs and call it confirmatory**) | `python scripts/analysis/final_holdout_evaluation.py` | `results/final_holdout/`, [findings](../docs/findings/final_holdout_evaluation.md) |
+| Secondary (prediabetes, HbA1c≥5.7%) threshold sensitivity, exploratory | `python scripts/analysis/secondary_threshold_cohort.py --bootstrap 100` | `results/secondary_threshold/`, [findings](../docs/findings/secondary_threshold_cohort.md) |
 
 The report generator writes only notebooks 05–06. The other scripts do not rewrite notebooks.
 Analysis scripts regenerate their own outputs; they do not select new cohort/model choices.

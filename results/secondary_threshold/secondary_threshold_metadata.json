@@ -1,0 +1,10 @@
+{
+  "n": 4612,
+  "positives_primary": 106,
+  "positives_secondary": 1348,
+  "secondary_cut": 5.7,
+  "primary_cut": 6.5,
+  "bootstrap_requested": 100,
+  "bootstrap_failures": 0,
+  "elapsed_seconds": 1789.6838290691376
+}

@@ -139,6 +139,18 @@ a separate, still-open complete-CBC-panel modeling choice, not a disagreement ov
 
 ## Phase 9 — Explore other relevant factors (feature expansion)
 
+**Status (2026-11-23):** `scripts/analysis/biomarker_expansion.py` screened liver, kidney,
+inflammation, lipid and insulin-resistance groups against the locked demographics+BMI+9-CBC
+baseline — see `docs/findings/biomarker_expansion.md`. Liver enzymes (+0.022 AUROC) and the
+lipid panel (+0.014 non-fasting, +0.030 fasting) are the most defensible genuinely-opportunistic
+candidates (same framing as CBC — often drawn for unrelated reasons, don't mechanistically
+embed the outcome). **HOMA-IR's large apparent gain (+0.082) should not be read as validating
+it as a screening test** — it's computed from fasting glucose × insulin, which is
+near-mechanistically linked to HbA1c, so this is closer to predicting a glucose-defined outcome
+from glucose than discovering new opportunistic signal. This is an exploratory screen only
+(no VIF recheck, no survey-weighted calibration, no independent-cycle validation, groups not
+tested in combination) and does not change `study_config.py`'s locked feature set.
+
 The original baseline only used the CBC panel + 5 demographic variables (`age_years`, `sex`,
 `race_eth`, `education`, `income_pir`). Several other NHANES-measured factors are plausible
 predictors of diabetes-range HbA1c and are either already sitting unused in this repo or are a
@@ -152,17 +164,24 @@ demographics-only).
 - [ ] **Fasting/refrigerated serum glucose** (`BIOPRO_L`, `LBXSGL`) — an alternate glucose
       measurement already flagged in the README as not yet incorporated; check how it relates to
       the fasting (`GLU_L`) and HbA1c labels before treating it as a feature vs. an outcome
-- [ ] **Liver enzymes** (`BIOPRO_L`: `LBXSATSI` ALT, `LBXSASSI` AST, `LBXSGTSI` GGT, `LBXSAPSI`
-      ALP) — nonalcoholic fatty liver disease is strongly associated with insulin resistance/T2D
-- [ ] **Kidney function** (`BIOPRO_L`: `LBXSCR` creatinine, `LBXSBU` BUN, `LBXSUA` uric acid) —
-      renal markers correlate with metabolic syndrome and diabetic nephropathy
-- [ ] **Insulin** (`INS_L`, `LBXIN`) — paired with fasting glucose, enables a HOMA-IR insulin-
-      resistance score, a clinically standard predictor the current model doesn't have access to
-- [ ] **hs-CRP** (`HSCRP_L`, `LBXHSCRP`) — systemic inflammation marker; directly relevant to the
+- [x] **Liver enzymes** (`BIOPRO_L`: `LBXSATSI` ALT, `LBXSASSI` AST, `LBXSGTSI` GGT, `LBXSAPSI`
+      ALP) — nonalcoholic fatty liver disease is strongly associated with insulin resistance/T2D.
+      Tested 2026-11-23: +0.022 AUROC over the locked baseline, n=4,351. See Phase 9 status above.
+- [x] **Kidney function** (`BIOPRO_L`: `LBXSCR` creatinine, `LBXSBU` BUN, `LBXSUA` uric acid) —
+      renal markers correlate with metabolic syndrome and diabetic nephropathy. Tested
+      2026-11-23: +0.010 AUROC, n=4,363.
+- [x] **Insulin** (`INS_L`, `LBXIN`) — paired with fasting glucose, enables a HOMA-IR insulin-
+      resistance score, a clinically standard predictor the current model doesn't have access to.
+      Tested 2026-11-23: insulin alone +0.026 AUROC, HOMA-IR +0.082 AUROC (n=2,265/2,436 fasting
+      subsample) — but see the circularity caveat in Phase 9 status above before treating either
+      as a validated opportunistic predictor.
+- [x] **hs-CRP** (`HSCRP_L`, `LBXHSCRP`) — systemic inflammation marker; directly relevant to the
       NLR/PLR inflammation literature already cited (Mertoglu, Lorenzo) but not yet tested as a
-      feature itself
-- [ ] **Lipid panel** (`TCHOL_L` total cholesterol, `HDL_L` HDL, `TRIGLY_L` LDL + triglycerides) —
-      classic metabolic-syndrome components, commonly included alongside CBC in comparable studies
+      feature itself. Tested 2026-11-23: +0.002 AUROC (negligible), n=4,481.
+- [x] **Lipid panel** (`TCHOL_L` total cholesterol, `HDL_L` HDL, `TRIGLY_L` LDL + triglycerides) —
+      classic metabolic-syndrome components, commonly included alongside CBC in comparable studies.
+      Tested 2026-11-23: +0.014 AUROC non-fasting (TC+HDL, n=4,408), +0.030 fasting
+      (triglycerides+LDL, n=2,263).
 - [ ] **Iron/anemia status** (`FERTIN_L` ferritin, `TFR_L` transferrin receptor, `FOLATE_L`/
       `FFMR_L`/`FOLFMS_L` folate) — directly relevant to the known HbA1c-anemia confound (English
       et al., already in the literature review) — useful both as candidate features and as a way
@@ -215,7 +234,7 @@ model comparisons remain open; notebook 06 adds frozen older-cycle evaluation.
 - [x] Add a simple age-only baseline for comparison
 - [ ] Add a matched demographics-only random forest (same split/settings) alongside the existing
       logistic-regression ablation
-- [ ] Add gradient boosting
+- [x] Add gradient boosting (Phase 15 Step 5, `research_extension.py`)
 - [x] Replace the single train/test split with stratified k-fold (or repeated stratified k-fold)
       cross-validation, with the full pipeline (impute → encode → scale → [PCA] → classifier)
       refit per fold
@@ -384,13 +403,60 @@ needs a supervised, name-preserving method instead.
       is apples-to-apples. This directly answers whether reduction recovers some of the AUROC gain
       lost to collinearity noise between the 11- and 21-feature stages (0.023→0.010 CBC-over-BMI
       gain; see `docs/findings/research_extension_results.md`).
-- [ ] **Step 5 — expand the model comparison itself**, now that the feature set is settled: add
-      gradient boosting (already an open Phase 10 item) alongside the existing logistic/forest
-      pair, using the same matched folds/weights/calibration so it's comparable, not a new
-      one-off evaluation.
-- [ ] **Step 6 — final locked evaluation.** Once a model + feature set is chosen from Step 4/5,
-      reserve a genuinely untouched holdout (or confirm the nested-CV design already satisfies
-      this) for the final reported numbers — the folds used during Steps 1–5 have already been
-      inspected across many specs and cannot be relabelled an untouched test set.
+- [x] **Step 5 — expand the model comparison itself** (done 2026-11-23, extended same day):
+      added `GradientBoostingClassifier`, `AdaBoostClassifier`, `SVC` (RBF kernel) and
+      `GaussianNB` (all scikit-learn, verified to support `sample_weight` in `fit()` first --
+      `KNeighborsClassifier` does not and was excluded rather than fit unweighted and left
+      incomparable) to `research_extension.py` alongside the existing logistic/forest pair, same
+      matched folds/weights/calibration (via the shared `nested()` path) — see Table 1b in
+      `docs/findings/research_extension_results.md`. Result: logistic regression beats every
+      alternative tested; AdaBoost is the strongest runner-up (0.821 vs. logistic's 0.835 AUROC
+      with CBC), clearly ahead of GBM (0.801) and forest (0.781); RBF SVM and Naive Bayes are
+      substantially weaker with untuned default hyperparameters (0.57-0.69) -- no hyperparameter
+      tuning was done, matching this file's no-selection-from-results discipline. None of the
+      six additional families are frozen/transported to the independent cycle or included in the
+      100-replicate bootstrap (matches how forest was already scoped) — a logical follow-on if
+      wanted later.
+
+      **SVM hyperparameter sensitivity (same day, exploratory):** an unrelated prior project
+      (`Sugar Predictor/` notebook, untracked, not part of this pipeline) found
+      `class_weight='balanced'` + grid-searched `C=100, gamma=1` dramatically improved its own
+      SVM. Checked here with a small, pre-specified (not searched-and-selected) set of
+      configurations through the identical matched folds/weights/calibration, reported as
+      Table 1c in `docs/findings/research_extension_results.md` rather than adopted as SVM's
+      default: `class_weight='balanced'` alone genuinely helps (0.692→0.769 AUROC), but directly
+      porting the other project's tuned `C=100, gamma=1` is actively harmful here (0.445, worse
+      than chance) — confirms why this file's no-hyperparameter-selection-from-results
+      discipline matters: a configuration tuned on different data can be destructive elsewhere.
+
+      **Class-balancing sensitivity, all 6 model families (same day, exploratory):** extended
+      the SVM-only check above to every model, using one mechanism (a class-balance sample
+      weight, sklearn's `'balanced'` formula, multiplied into the existing survey weight) so it
+      works uniformly even for model types with no native `class_weight` parameter (gradient
+      boosting, AdaBoost, Naive Bayes). Reported as Table 1d; none of the balanced variants
+      replace any model's default fitting in Table 1b. Result is highly model-dependent: SVM
+      (+0.074 AUROC) and random forest (+0.019) benefit meaningfully; gradient boosting modestly
+      (+0.005); logistic regression, AdaBoost and Naive Bayes are essentially unchanged
+      (within ±0.003) — margin/distance-based and empirical-partition methods appear more
+      sensitive to training-sample class skew than models already built around reweighting
+      (AdaBoost) or explicit likelihood/prior estimation (logistic, Naive Bayes).
+
+      **Logistic + AdaBoost ensemble and paired bootstrap comparison (same day):** added a
+      soft-voting ensemble (`VotingClassifier`) to the headline comparison and the 100-replicate
+      bootstrap. Point estimates: ensemble 0.846 > logistic 0.835 > AdaBoost 0.821 AUROC. Paired
+      bootstrap intervals for the three gaps: Logistic−AdaBoost −0.042 to 0.101 (includes zero),
+      Ensemble−Logistic −0.058 to 0.046 (includes zero), Ensemble−AdaBoost **0.003 to 0.065**
+      (excludes zero, barely). Only the ensemble-vs-AdaBoost gap is distinguishable from
+      resampling noise. See `docs/findings/research_extension_results.md`.
+- [x] **Step 6 — final locked evaluation** (done 2026-11-23): `scripts/analysis/final_holdout_evaluation.py`
+      reserves a fresh, single PSU-grouped development (3,407/77 positive) vs. holdout
+      (1,205/29 positive) split, seed `99912601` (used nowhere else in this codebase), and
+      evaluates logistic/AdaBoost/ensemble exactly once after development-only calibration —
+      see `docs/findings/final_holdout_evaluation.md`. Result: **AdaBoost outperforms logistic
+      on this holdout** (0.829 vs. 0.766 AUROC, 100% vs. 90.2% weighted sensitivity, 0 vs. 1
+      missed positive of 29) — the reverse of the nested-CV ranking used elsewhere, though with
+      only 29 events this should be read as "the two remain close, not confidently separable,"
+      not as AdaBoost being definitively better. **This holdout is now spent** — it must not be
+      rerun with a different model/feature spec and reported as confirmatory.
 
 **2026-11-16 reconciliation:** Phase 4 cleaning is also addressed in Setayesh PR 15; Phase 8 and selected Phase 9 blocks in Ella PRs 13–14. Those branches use different eligibility/outcomes and are pending integration, so their tasks are not automatically marked complete here. See CHECKLIST_AUDIT.md. Phase 12 has an exploratory threshold procedure, but team justification and a final policy remain open. Phase 9 is a candidate menu, not a requirement to add every measured biomarker.
