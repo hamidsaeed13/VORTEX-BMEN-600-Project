@@ -139,6 +139,18 @@ a separate, still-open complete-CBC-panel modeling choice, not a disagreement ov
 
 ## Phase 9 — Explore other relevant factors (feature expansion)
 
+**Status (2026-11-23):** `scripts/analysis/biomarker_expansion.py` screened liver, kidney,
+inflammation, lipid and insulin-resistance groups against the locked demographics+BMI+9-CBC
+baseline — see `docs/findings/biomarker_expansion.md`. Liver enzymes (+0.022 AUROC) and the
+lipid panel (+0.014 non-fasting, +0.030 fasting) are the most defensible genuinely-opportunistic
+candidates (same framing as CBC — often drawn for unrelated reasons, don't mechanistically
+embed the outcome). **HOMA-IR's large apparent gain (+0.082) should not be read as validating
+it as a screening test** — it's computed from fasting glucose × insulin, which is
+near-mechanistically linked to HbA1c, so this is closer to predicting a glucose-defined outcome
+from glucose than discovering new opportunistic signal. This is an exploratory screen only
+(no VIF recheck, no survey-weighted calibration, no independent-cycle validation, groups not
+tested in combination) and does not change `study_config.py`'s locked feature set.
+
 The original baseline only used the CBC panel + 5 demographic variables (`age_years`, `sex`,
 `race_eth`, `education`, `income_pir`). Several other NHANES-measured factors are plausible
 predictors of diabetes-range HbA1c and are either already sitting unused in this repo or are a
@@ -152,17 +164,24 @@ demographics-only).
 - [ ] **Fasting/refrigerated serum glucose** (`BIOPRO_L`, `LBXSGL`) — an alternate glucose
       measurement already flagged in the README as not yet incorporated; check how it relates to
       the fasting (`GLU_L`) and HbA1c labels before treating it as a feature vs. an outcome
-- [ ] **Liver enzymes** (`BIOPRO_L`: `LBXSATSI` ALT, `LBXSASSI` AST, `LBXSGTSI` GGT, `LBXSAPSI`
-      ALP) — nonalcoholic fatty liver disease is strongly associated with insulin resistance/T2D
-- [ ] **Kidney function** (`BIOPRO_L`: `LBXSCR` creatinine, `LBXSBU` BUN, `LBXSUA` uric acid) —
-      renal markers correlate with metabolic syndrome and diabetic nephropathy
-- [ ] **Insulin** (`INS_L`, `LBXIN`) — paired with fasting glucose, enables a HOMA-IR insulin-
-      resistance score, a clinically standard predictor the current model doesn't have access to
-- [ ] **hs-CRP** (`HSCRP_L`, `LBXHSCRP`) — systemic inflammation marker; directly relevant to the
+- [x] **Liver enzymes** (`BIOPRO_L`: `LBXSATSI` ALT, `LBXSASSI` AST, `LBXSGTSI` GGT, `LBXSAPSI`
+      ALP) — nonalcoholic fatty liver disease is strongly associated with insulin resistance/T2D.
+      Tested 2026-11-23: +0.022 AUROC over the locked baseline, n=4,351. See Phase 9 status above.
+- [x] **Kidney function** (`BIOPRO_L`: `LBXSCR` creatinine, `LBXSBU` BUN, `LBXSUA` uric acid) —
+      renal markers correlate with metabolic syndrome and diabetic nephropathy. Tested
+      2026-11-23: +0.010 AUROC, n=4,363.
+- [x] **Insulin** (`INS_L`, `LBXIN`) — paired with fasting glucose, enables a HOMA-IR insulin-
+      resistance score, a clinically standard predictor the current model doesn't have access to.
+      Tested 2026-11-23: insulin alone +0.026 AUROC, HOMA-IR +0.082 AUROC (n=2,265/2,436 fasting
+      subsample) — but see the circularity caveat in Phase 9 status above before treating either
+      as a validated opportunistic predictor.
+- [x] **hs-CRP** (`HSCRP_L`, `LBXHSCRP`) — systemic inflammation marker; directly relevant to the
       NLR/PLR inflammation literature already cited (Mertoglu, Lorenzo) but not yet tested as a
-      feature itself
-- [ ] **Lipid panel** (`TCHOL_L` total cholesterol, `HDL_L` HDL, `TRIGLY_L` LDL + triglycerides) —
-      classic metabolic-syndrome components, commonly included alongside CBC in comparable studies
+      feature itself. Tested 2026-11-23: +0.002 AUROC (negligible), n=4,481.
+- [x] **Lipid panel** (`TCHOL_L` total cholesterol, `HDL_L` HDL, `TRIGLY_L` LDL + triglycerides) —
+      classic metabolic-syndrome components, commonly included alongside CBC in comparable studies.
+      Tested 2026-11-23: +0.014 AUROC non-fasting (TC+HDL, n=4,408), +0.030 fasting
+      (triglycerides+LDL, n=2,263).
 - [ ] **Iron/anemia status** (`FERTIN_L` ferritin, `TFR_L` transferrin receptor, `FOLATE_L`/
       `FFMR_L`/`FOLFMS_L` folate) — directly relevant to the known HbA1c-anemia confound (English
       et al., already in the literature review) — useful both as candidate features and as a way
@@ -215,7 +234,7 @@ model comparisons remain open; notebook 06 adds frozen older-cycle evaluation.
 - [x] Add a simple age-only baseline for comparison
 - [ ] Add a matched demographics-only random forest (same split/settings) alongside the existing
       logistic-regression ablation
-- [ ] Add gradient boosting
+- [x] Add gradient boosting (Phase 15 Step 5, `research_extension.py`)
 - [x] Replace the single train/test split with stratified k-fold (or repeated stratified k-fold)
       cross-validation, with the full pipeline (impute → encode → scale → [PCA] → classifier)
       refit per fold
@@ -237,7 +256,7 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
       ignores NHANES clustering/stratification)
 - [x] Use held-out permutation importance instead of impurity-based importance for predictor
       interpretation: [analysis and limitations](../findings/permutation_importance.md).
-      Two existing models, nine blocks, 20 within-PSU permutations; frozen development-only
+      Two existing models, eight blocks (income dropped, Phase 15), 20 within-PSU permutations; frozen development-only
       preprocessing/calibration and weighted evaluation. Permutation SD is not a confidence interval.
 - [x] Subgroup/sensitivity analysis: compare HbA1c-based and fasting-glucose-based results to
       check sensitivity to HbA1c-related measurement effects (e.g. anemia)
@@ -270,7 +289,82 @@ notebooks 05–06 add 100 full refits and matched HbA1c/fasting-glucose sensitiv
 
 ## Phase 15 — CBC feature reduction (blocking item before final model comparison)
 
-**Status (2026-11-23):** Not started. The team decided (cohort-summary table, same meeting as
+**Status (2026-11-23):** Steps 1-2 complete with a concrete candidate for Step 3 review — see
+[feature reduction findings](../findings/feature_reduction.md) and
+`scripts/analysis/feature_reduction.py`. Key results: dropping only the algebraically-redundant
+columns (MCH, MCHC, 5 absolute counts) barely reduces VIF for the worst offenders
+(`LBXNEPCT`/`LBXLYPCT`); the real driver is the 5-part differential's compositional constraint
+(sums to ~100%), fixed by also dropping one percentage (basophil %) — together these bring VIF
+from ~26,000 back to ~809 (13-feature `candidate_13`). An L1 path on this de-redundanced set
+reaches a *higher* best AUROC (0.8108) than the naive full-21 L1 path (0.8091) with fewer
+features. A 25-fold repeated-CV stability check (not just one split) found a reliably-selected
+core of 7 features (RBC, MCV, WBC, lymphocyte %, monocyte %, platelet count, eosinophil %) — one
+of the original 8 knee features (MPV) turned out to be unstable (36% selection rate) and
+shouldn't have been trusted from the single-split result alone. Adding hemoglobin/hematocrit
+back for clinical face validity costs ~nothing in AUROC (0.8211→0.8210), so the proposed
+**9-feature candidate** is: RBC, HGB, HCT, MCV, WBC, platelet count, lymphocyte %, monocyte %,
+eosinophil % — dropping MCH, MCHC, all 5 absolute counts, basophil %, neutrophil %, RDW, NRBC
+and MPV.
+
+**Direct validation (2026-11-23, per team instruction to verify nothing informative is being
+dropped even if it matters "a little"):** every one of the 12 dropped CBC features was tested
+individually — added back alone to the 9-feature base, repeated 25-fold weighted-AUROC
+comparison. None showed a real gain (all within ±8% of their own fold-to-fold SD, i.e. noise).
+This specifically resolves the neutrophil-% concern raised earlier (dropped only because it lost
+a collinear tie-break against lymphocyte % under L1, not confirmed non-redundant at the time):
+it gains -0.0001 AUROC when added back, confirming the drop is safe, not an L1 artifact. The
+9-feature candidate is now evidence-backed as not discarding any informative feature, checked
+directly rather than inferred from VIF/L1 behavior alone.
+
+**Scope then expanded to all features, not just CBC** (2026-11-23): a repeated (25-fold)
+leave-one-block-out ablation tested age, income, sex, race/ethnicity, education and BMI for
+removal too, alongside the reduced CBC block. Age, BMI, race/ethnicity and the reduced CBC block
+all show clear, low-noise positive contributions and should be kept. **Income shows ~zero
+marginal contribution in both this ablation and the existing permutation-importance findings
+(convergent evidence it can be dropped).** Sex is small but likely real. Education is the one
+genuine disagreement between methods (ablation: ~0; permutation importance: modest positive) —
+flagged for the team rather than resolved unilaterally.
+
+**Completeness check (2026-11-23):** income and education are correlated (Spearman ρ=0.50), so
+dropping both costs ~8x more than the sum of dropping each alone (0.0055 vs. 0.0007) — they
+partially substitute for each other, so at least one should stay even though either looks
+individually droppable. **Bottom line:** the proposed 14-feature model (age, BMI, sex,
+race/ethnicity, education, 9-feature reduced CBC — income dropped) scores *higher* than the
+current 27-feature baseline (0.8357 vs. 0.8241 weighted AUROC), not just equivalent with fewer
+features. See [feature reduction findings](../findings/feature_reduction.md) for the full
+comparison tables and three explicit scope caveats: (1) not yet validated against the
+independent 2017-2018 cycle (Step 4 work), (2) dropping income/education from the model is a
+predictive-modeling decision, not a claim about real-world health-disparity relevance, and (3)
+this only reduced the *current* feature set — Phase 9's list of never-added NHANES variables
+(lipids, insulin, hs-CRP, liver/kidney markers, smoking, blood pressure, family history, etc.)
+was not screened and is a separate scope question for the team.
+
+**Head-to-head pipeline validation (2026-11-23):** `study_config.py` now carries both variants
+explicitly (`CBC_FEATURES_INITIAL`/`_REDUCED`, `NUMERIC_DEMOGRAPHICS_INITIAL`/`_REDUCED`, and a
+`FEATURE_SET_VARIANTS` lookup with display labels) — the unqualified names every existing script
+reads are untouched and still resolve to `INITIAL`. A new `scripts/phase-2/` holds copies of
+`cohort_analysis.py`, `weighted_calibration_analysis.py` and `research_extension.py`,
+parameterized to run under both variants and write to `results/phase-2/<script>/{initial,reduced,comparison}/`
+with labeled-legend comparison figures. Result, across all three scripts and every scenario
+`research_extension.py` tests (including the independent 2017-2018 cycle): the reduced set wins
+for every logistic model (+0.012 to +0.024 AUROC), forest results are mixed. See
+[the full comparison](../findings/phase2_feature_variant_comparison.md).
+
+**Step 3 locked (2026-11-23):** `study_config.py`'s unqualified names (`CBC_FEATURES`,
+`NUMERIC_DEMOGRAPHICS`, `RED_CELL_FEATURES`, `WHITE_CELL_PLATELET_FEATURES`) now resolve to the
+9-feature reduced block and income-dropped demographics by default. `*_INITIAL` is retained
+unchanged as the historical starting point. **Step 4 done:** the full official pipeline was
+re-run with the locked set — `cohort_analysis.py`, `research_extension.py --bootstrap 100`,
+`weighted_calibration_analysis.py`, `cbc_diagnostics.py` (reworked to a three-stage
+legacy_11/historical_21/current_9 comparison; worst VIF dropped from ~26,000 to ~144, a >180x
+improvement), `heldout_permutation_importance.py` (income block removed — it's no longer a
+model input, so permuting it was a structural no-op, not a "zero importance" finding), every
+verification script (cohort-size and external-cycle-size assertions updated: external cycle grew
+from 3,939 to 3,943 under the less-restrictive 9-column completeness requirement), and all
+notebooks. All findings docs and README updated with the new numbers. Steps 5-6 (gradient
+boosting, final locked holdout evaluation) remain open.
+
+The team decided (cohort-summary table, same meeting as
 the 21-feature CBC decision) that feature reduction happens as its own dedicated stage, not
 folded into the current 21-feature baseline. This phase exists to track that work explicitly so
 it isn't lost. Trigger/evidence: Phase 7's VIF check on the full 21-feature block found VIF up to
@@ -285,23 +379,23 @@ difference (0.8107 vs 0.8141), so compressing to components buys nothing and wou
 the resulting panel non-actionable (a lab can't "order less of" a PCA component). Reduction
 needs a supervised, name-preserving method instead.
 
-- [ ] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
+- [x] **Step 1 — drop the algebraically-redundant columns first**, as a documented default pass,
       before any data-driven selection: MCH, MCHC (implied by HGB/RBC/HCT already kept) and the
       five absolute differential counts (implied by WBC × percentage already kept). Re-run VIF
       (`cbc_diagnostics.py`) on the resulting ~14-feature set to confirm this brings VIF back down
       toward the legacy-block range.
-- [ ] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
+- [x] **Step 2 — supervised selection on what's left.** Run an L1 (Lasso) logistic-regression
       regularization path (nested CV, development data only, matching the existing
       `weighted_calibration_analysis.py`/`research_extension.py` fold structure) to see which CBC
       coefficients survive at an AUROC-preserving penalty. Cross-check against the existing
       held-out permutation-importance results (`docs/findings/permutation_importance.md`) and VIF
       — a feature that's both low-importance and high-VIF is a strong drop candidate; a
       low-VIF/low-importance feature is a weaker one (drop for parsimony, not collinearity).
-- [ ] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
+- [x] **Step 3 — team decision and lock the reduced set.** Document the resulting feature list as
       a new canonical block in `study_config.py` (same pattern as `CBC_FEATURES`), with the
       rationale (which columns were dropped and why), the same way the 11→21 and 21→reduced
       decisions are now tracked here.
-- [ ] **Step 4 — head-to-head model comparison on the locked set.** Re-run the full pipeline
+- [x] **Step 4 — head-to-head model comparison on the locked set.** Re-run the full pipeline
       (`cohort_analysis.py`, `weighted_calibration_analysis.py`, `research_extension.py` and their
       notebooks) with the reduced block, producing one comparison table across: age-only,
       demographics, demographics+BMI, demographics+BMI+full-21-CBC (current baseline),
@@ -309,13 +403,60 @@ needs a supervised, name-preserving method instead.
       is apples-to-apples. This directly answers whether reduction recovers some of the AUROC gain
       lost to collinearity noise between the 11- and 21-feature stages (0.023→0.010 CBC-over-BMI
       gain; see `docs/findings/research_extension_results.md`).
-- [ ] **Step 5 — expand the model comparison itself**, now that the feature set is settled: add
-      gradient boosting (already an open Phase 10 item) alongside the existing logistic/forest
-      pair, using the same matched folds/weights/calibration so it's comparable, not a new
-      one-off evaluation.
-- [ ] **Step 6 — final locked evaluation.** Once a model + feature set is chosen from Step 4/5,
-      reserve a genuinely untouched holdout (or confirm the nested-CV design already satisfies
-      this) for the final reported numbers — the folds used during Steps 1–5 have already been
-      inspected across many specs and cannot be relabelled an untouched test set.
+- [x] **Step 5 — expand the model comparison itself** (done 2026-11-23, extended same day):
+      added `GradientBoostingClassifier`, `AdaBoostClassifier`, `SVC` (RBF kernel) and
+      `GaussianNB` (all scikit-learn, verified to support `sample_weight` in `fit()` first --
+      `KNeighborsClassifier` does not and was excluded rather than fit unweighted and left
+      incomparable) to `research_extension.py` alongside the existing logistic/forest pair, same
+      matched folds/weights/calibration (via the shared `nested()` path) — see Table 1b in
+      `docs/findings/research_extension_results.md`. Result: logistic regression beats every
+      alternative tested; AdaBoost is the strongest runner-up (0.821 vs. logistic's 0.835 AUROC
+      with CBC), clearly ahead of GBM (0.801) and forest (0.781); RBF SVM and Naive Bayes are
+      substantially weaker with untuned default hyperparameters (0.57-0.69) -- no hyperparameter
+      tuning was done, matching this file's no-selection-from-results discipline. None of the
+      six additional families are frozen/transported to the independent cycle or included in the
+      100-replicate bootstrap (matches how forest was already scoped) — a logical follow-on if
+      wanted later.
+
+      **SVM hyperparameter sensitivity (same day, exploratory):** an unrelated prior project
+      (`Sugar Predictor/` notebook, untracked, not part of this pipeline) found
+      `class_weight='balanced'` + grid-searched `C=100, gamma=1` dramatically improved its own
+      SVM. Checked here with a small, pre-specified (not searched-and-selected) set of
+      configurations through the identical matched folds/weights/calibration, reported as
+      Table 1c in `docs/findings/research_extension_results.md` rather than adopted as SVM's
+      default: `class_weight='balanced'` alone genuinely helps (0.692→0.769 AUROC), but directly
+      porting the other project's tuned `C=100, gamma=1` is actively harmful here (0.445, worse
+      than chance) — confirms why this file's no-hyperparameter-selection-from-results
+      discipline matters: a configuration tuned on different data can be destructive elsewhere.
+
+      **Class-balancing sensitivity, all 6 model families (same day, exploratory):** extended
+      the SVM-only check above to every model, using one mechanism (a class-balance sample
+      weight, sklearn's `'balanced'` formula, multiplied into the existing survey weight) so it
+      works uniformly even for model types with no native `class_weight` parameter (gradient
+      boosting, AdaBoost, Naive Bayes). Reported as Table 1d; none of the balanced variants
+      replace any model's default fitting in Table 1b. Result is highly model-dependent: SVM
+      (+0.074 AUROC) and random forest (+0.019) benefit meaningfully; gradient boosting modestly
+      (+0.005); logistic regression, AdaBoost and Naive Bayes are essentially unchanged
+      (within ±0.003) — margin/distance-based and empirical-partition methods appear more
+      sensitive to training-sample class skew than models already built around reweighting
+      (AdaBoost) or explicit likelihood/prior estimation (logistic, Naive Bayes).
+
+      **Logistic + AdaBoost ensemble and paired bootstrap comparison (same day):** added a
+      soft-voting ensemble (`VotingClassifier`) to the headline comparison and the 100-replicate
+      bootstrap. Point estimates: ensemble 0.846 > logistic 0.835 > AdaBoost 0.821 AUROC. Paired
+      bootstrap intervals for the three gaps: Logistic−AdaBoost −0.042 to 0.101 (includes zero),
+      Ensemble−Logistic −0.058 to 0.046 (includes zero), Ensemble−AdaBoost **0.003 to 0.065**
+      (excludes zero, barely). Only the ensemble-vs-AdaBoost gap is distinguishable from
+      resampling noise. See `docs/findings/research_extension_results.md`.
+- [x] **Step 6 — final locked evaluation** (done 2026-11-23): `scripts/analysis/final_holdout_evaluation.py`
+      reserves a fresh, single PSU-grouped development (3,407/77 positive) vs. holdout
+      (1,205/29 positive) split, seed `99912601` (used nowhere else in this codebase), and
+      evaluates logistic/AdaBoost/ensemble exactly once after development-only calibration —
+      see `docs/findings/final_holdout_evaluation.md`. Result: **AdaBoost outperforms logistic
+      on this holdout** (0.829 vs. 0.766 AUROC, 100% vs. 90.2% weighted sensitivity, 0 vs. 1
+      missed positive of 29) — the reverse of the nested-CV ranking used elsewhere, though with
+      only 29 events this should be read as "the two remain close, not confidently separable,"
+      not as AdaBoost being definitively better. **This holdout is now spent** — it must not be
+      rerun with a different model/feature spec and reported as confirmatory.
 
 **2026-11-16 reconciliation:** Phase 4 cleaning is also addressed in Setayesh PR 15; Phase 8 and selected Phase 9 blocks in Ella PRs 13–14. Those branches use different eligibility/outcomes and are pending integration, so their tasks are not automatically marked complete here. See CHECKLIST_AUDIT.md. Phase 12 has an exploratory threshold procedure, but team justification and a final policy remain open. Phase 9 is a candidate menu, not a requirement to add every measured biomarker.

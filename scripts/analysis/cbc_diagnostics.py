@@ -20,12 +20,17 @@ import study_config as cfg
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'results/cbc_diagnostics'
-CBC = ext.RED + ext.WHITE  # current team-agreed 21-feature panel (study_config.py, 2026-11-23)
+CBC = ext.RED + ext.WHITE  # current LOCKED 9-feature panel (study_config.py, Phase 15 Step 3, 2026-11-23)
 
-# The pre-2026-11-23 canonical set (team decision superseded by the 21-feature block above):
-# excluded MCH, MCHC, MPV, NRBC, basophil % and the five absolute differential counts.
+# Three stages of this project's CBC feature-block history, oldest to current:
+# legacy_11 (pre-2026-11-23): excluded MCH, MCHC, MPV, NRBC, basophil % and the absolute counts.
+# historical_21 (2026-11-23 cohort-summary decision): briefly kept all 21 CBC variables.
+# current (CBC, above): Phase 15 reduction -- every one of the 12 dropped columns (relative to
+# historical_21) was confirmed by direct marginal-addition testing to add no measurable AUROC
+# (see docs/findings/feature_reduction.md); this is the locked default as of Phase 15 Step 3.
 LEGACY_11 = ['LBXRBCSI', 'LBXHGB', 'LBXHCT', 'LBXMCVSI', 'LBXRDW',
              'LBXWBCSI', 'LBXPLTSI', 'LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT']
+HISTORICAL_21 = cfg.CBC_FEATURES_INITIAL
 
 
 class CheckedPCA(PCA):
@@ -79,9 +84,19 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     full, d = ext.load_cycle('L')
     assert len(d) == 4612 and d.target.sum() == 106
-    d[ext.CBC].corr().to_csv(OUT / 'cbc_correlations.csv')
+    # ext.load_cycle only merges the current locked CBC block (9 features); this script's
+    # historical VIF comparison needs the full historical_21 panel, so merge in whatever's
+    # missing directly from the raw file (CBC completeness is all-or-nothing in this data,
+    # verified independently, so this adds columns, not rows or NaNs).
+    missing_cols = [c for c in HISTORICAL_21 if c not in d.columns]
+    if missing_cols:
+        cbc_raw = ext.read(ROOT / 'data/raw/2021_2023/CBC_L.xpt')
+        d = d.merge(cbc_raw[['SEQN'] + missing_cols], on='SEQN', how='left', validate='one_to_one')
+        assert d[missing_cols].notna().all().all()
+    d[HISTORICAL_21].corr().to_csv(OUT / 'cbc_correlations.csv')
     rows = vif_table(d[LEGACY_11], d._weight.to_numpy(), 'legacy_11')
-    rows += vif_table(d[ext.CBC], d._weight.to_numpy(), 'full_21')
+    rows += vif_table(d[HISTORICAL_21], d._weight.to_numpy(), 'historical_21')
+    rows += vif_table(d[CBC], d._weight.to_numpy(), 'current_9')
     pd.DataFrame(rows).to_csv(OUT / 'cbc_vif.csv', index=False)
     differential = d[['LBXLYPCT', 'LBXNEPCT', 'LBXMOPCT', 'LBXEOPCT', 'LBXBAPCT']].sum(axis=1)
     relationships = {
@@ -179,44 +194,45 @@ def main():
         table.append(f'| {r.model} | {r.AUROC:.4f} | {r.AP:.4f} | {r.Brier:.5f} | '
                      f'{r.log_loss:.5f} | {r.deferred_n} | {r.missed_n} |')
     vif = pd.DataFrame(rows)
-    top = vif.loc[(vif.block == 'full_21') & (vif.weighting == 'survey_weighted')].nlargest(4, 'VIF')
+    top = vif.loc[(vif.block == 'current_9') & (vif.weighting == 'survey_weighted')].nlargest(4, 'VIF')
     notes = '\n'.join(f'- {r.variable}: weighted VIF {r.VIF:.1f}.' for r in top.itertuples())
     counts = sorted({int(r['components']) for r in audit if 'components' in r})
-    report = f'''# CBC collinearity and PCA supplement — 2026-11-23
+    report = f'''# CBC collinearity and PCA supplement — 2026-11-23 (updated for the Phase 15 locked 9-feature set)
 
 Exploratory Phase 7 supplement on the fixed 4,612 adults / 106 positive HbA1c labels.
 The original primary analysis and independent-cycle results are preserved.
 
-## Collinearity
+## Collinearity: three stages of this project's CBC feature-block history
 
-Differential percentages sum to {differential.min():.1f}–{differential.max():.1f}%
-(mean {differential.mean():.3f}%). The team's 2026-11-23 cohort-summary decision
-supersedes the earlier 11-predictor block (which dropped MCH, MCHC, MPV, NRBC,
-basophil % and the five absolute differential counts): all 21 CBC variables are
-now kept as model features. Rounding makes the released differential sum
-approximately fixed. VIFs for both the legacy 11-predictor block and the current
-full 21-predictor block are exported with ordinary and survey-weighted auxiliary
-regressions and an intercept, so the earlier collinearity finding can be checked
-against the larger panel.
-Adding back the dropped components does not remove the strong approximate
-dependence among the differential percentages; high VIF persists and motivates
-the PCA sensitivity arm.
+1. **legacy_11** (pre-2026-11-23): excluded MCH, MCHC, MPV, NRBC, basophil % and the five
+   absolute differential counts. Worst survey-weighted VIF was ~808 (`LBXNEPCT`).
+2. **historical_21** (2026-11-23 cohort-summary decision): briefly kept all 21 CBC variables.
+   Differential percentages sum to {differential.min():.1f}–{differential.max():.1f}%
+   (mean {differential.mean():.3f}%) by construction, so any 4 of the 5 determine the 5th;
+   combined with MCH/MCHC/absolute-count redundancy this drove worst VIF to ~26,000
+   (`LBXNEPCT`).
+3. **current** (locked default as of Phase 15 Step 3, this report): the 9-feature set below,
+   after every one of the 12 dropped `historical_21` columns was confirmed by direct
+   marginal-addition testing (add it back alone, measure AUROC over 25 repeated PSU-grouped
+   folds) to add no measurable gain -- see `docs/findings/feature_reduction.md`.
 
-Largest survey-weighted VIFs in the current full 21-predictor block:
+Largest survey-weighted VIFs in the **current 9-predictor block**:
 
 {notes}
 
-Hematocrit approximately equals RBC × MCV / 10 (median absolute residual
-{relationships['hct_minus_rbc_times_mcv_over_10_abs_median']:.4f} hematocrit
-percentage points). Now that MCH and MCHC are themselves predictors, the same
-kind of near-identity applies to them: MCH ≈ HGB × 10 / RBC (median absolute
-residual {relationships['mch_minus_hgb_times_10_over_rbc_abs_median']:.4f} pg) and
-MCHC ≈ HGB × 100 / HCT (median absolute residual
-{relationships['mchc_minus_hgb_times_100_over_hct_abs_median']:.4f} g/dL) — both
-expected to inflate VIF further in the full 21-predictor block versus the legacy
-11. High VIF does not justify causal interpretation, nor does it automatically
-invalidate penalized prediction. Retain the existing regularized raw-feature
-model and treat PCA as a secondary robustness comparison.
+This is a >180x reduction from `historical_21`'s worst VIF (~26,000) and still an improvement
+on `legacy_11`'s (~808) — the remaining collinearity is just the expected, mild
+RBC/MCV/HCT/HGB red-cell-index relationship (hematocrit approximately equals RBC × MCV / 10;
+median absolute residual {relationships['hct_minus_rbc_times_mcv_over_10_abs_median']:.4f}
+hematocrit percentage points). MCH and MCHC are no longer predictors in the current block (they
+were dropped as algebraically redundant with HGB/RBC/HCT, confirmed by direct test, not just
+VIF), so those near-identities are reported here only as historical context: MCH ≈ HGB × 10 / RBC
+(median absolute residual {relationships['mch_minus_hgb_times_10_over_rbc_abs_median']:.4f} pg)
+and MCHC ≈ HGB × 100 / HCT (median absolute residual
+{relationships['mchc_minus_hgb_times_100_over_hct_abs_median']:.4f} g/dL). The white-cell/platelet/
+differential features in the current block (WBC, platelets, lymphocyte/monocyte/eosinophil %)
+now show essentially no collinearity (VIF ≈ 1) — the two differential percentages dropped
+(neutrophil %, basophil %) were exactly what drove the `historical_21` compositional blow-up.
 
 ## Matched nested comparison
 

@@ -1,0 +1,51 @@
+{
+  "variant": "reduced",
+  "label": "Reduced (9 CBC features, no income)",
+  "n_cbc_features": 9,
+  "protocol_sha256": "336caf6221795d5acdf25499d660f4b6412316b46319715ffd9b532e82d1962c",
+  "bootstrap_requested": 100,
+  "bootstrap_failures": 0,
+  "elapsed_seconds": 115.54022979736328,
+  "cycle_counts": [
+    {
+      "cycle": "2021_2023",
+      "n": 4612,
+      "positives": 106,
+      "bmi_missing": 52,
+      "weighted_prevalence": 0.019881436273137577,
+      "eligible_before_labs": 4657,
+      "low_hgb": 421
+    },
+    {
+      "cycle": "2017_2018",
+      "n": 3943,
+      "positives": 132,
+      "bmi_missing": 57,
+      "weighted_prevalence": 0.020619028714090167,
+      "eligible_before_labs": 4137,
+      "low_hgb": 352
+    }
+  ],
+  "primary_specs": {
+    "demographics": [
+      "RIDAGEYR"
+    ],
+    "demographics_bmi": [
+      "RIDAGEYR",
+      "BMXBMI"
+    ],
+    "demographics_bmi_cbc": [
+      "RIDAGEYR",
+      "BMXBMI",
+      "LBXRBCSI",
+      "LBXHGB",
+      "LBXHCT",
+      "LBXMCVSI",
+      "LBXWBCSI",
+      "LBXPLTSI",
+      "LBXLYPCT",
+      "LBXMOPCT",
+      "LBXEOPCT"
+    ]
+  }
+}

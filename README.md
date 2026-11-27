@@ -108,6 +108,79 @@ leak identified in [the team review](docs/reviews/TEAM_REVIEW.md). Supersedes th
 </details>
 
 <details>
+<summary>Phase 15 — CBC/demographic feature reduction, locked 2026-11-23</summary>
+
+- [Exploration script](scripts/analysis/feature_reduction.py) · [findings](docs/findings/feature_reduction.md)
+- [Phase 2 initial-vs-reduced pipeline comparison](scripts/phase-2/) · [findings](docs/findings/phase2_feature_variant_comparison.md)
+- [Project plan](docs/planning/PROJECT_PLAN.md#phase-15--cbc-feature-reduction-blocking-item-before-final-model-comparison)
+
+Drops the CBC panel from 21 to 9 features (every dropped feature individually confirmed to add
+no measurable AUROC, not just inferred from collinearity) and income from the demographic
+baseline. `study_config.py`'s unqualified names (`CBC_FEATURES`, `NUMERIC_DEMOGRAPHICS`, etc.)
+now resolve to this **reduced** block — every script and notebook above reads it by default.
+The original 21-feature/income block is retained explicitly as `*_INITIAL` for comparison; the
+`scripts/phase-2/` copies still run and compare both. Validated via the full official pipeline,
+not just the exploratory script: the reduced set won on every logistic model and every scenario
+`research_extension.py` tests, including the independent 2017–2018 cycle, and the locked
+9-feature CBC block's worst collinearity (VIF ≈ 144) is a >180x improvement on the 21-feature
+stage's (≈26,000) — see `docs/findings/cbc_diagnostics.md`.
+
+</details>
+
+<details>
+<summary>Phase 15 Step 6 — final locked holdout evaluation (spent, 2026-11-23)</summary>
+
+- [Script](scripts/analysis/final_holdout_evaluation.py) · [findings](docs/findings/final_holdout_evaluation.md)
+
+Every other number in this project comes from nested CV reused across dozens of specs. This
+reserves one genuinely fresh, never-touched PSU-grouped holdout (seed used nowhere else in this
+codebase) and evaluates logistic/AdaBoost/ensemble exactly once. Result: **AdaBoost outperforms
+logistic on this holdout** (0.829 vs. 0.766 AUROC, 100% vs. 90.2% weighted sensitivity) — the
+reverse of the nested-CV ranking used elsewhere, though with only 29 holdout positive events
+this should be read as "the two remain close," not as AdaBoost being definitively better.
+**This holdout is now spent** and must not be rerun with a different spec and called confirmatory.
+
+</details>
+
+<details>
+<summary>Phase 9 — biomarker expansion screen (exploratory, 2026-11-23)</summary>
+
+- [Script](scripts/analysis/biomarker_expansion.py) · [findings](docs/findings/biomarker_expansion.md)
+
+Screens liver, kidney, inflammation and lipid panels — already downloaded, never used until now
+— against the locked baseline. Liver enzymes (+0.022 AUROC) and the lipid panel (+0.014–0.030)
+are the most defensible genuinely-opportunistic candidates, same framing as CBC. **HOMA-IR's
+large apparent gain (+0.082) should not be read as validating it as a screening test** — it's
+computed from fasting glucose × insulin, near-mechanistically linked to HbA1c, so this is closer
+to predicting a glucose-defined outcome from glucose than discovering new signal. Exploratory
+screen only; does not change the locked feature set.
+
+</details>
+
+<details>
+<summary>Secondary (prediabetes) HbA1c threshold sensitivity (exploratory, 2026-11-24)</summary>
+
+- [Script](scripts/analysis/secondary_threshold_cohort.py) · [findings](docs/findings/secondary_threshold_cohort.md)
+
+Relabels the same locked 4,612-person cohort using the secondary/prediabetes HbA1c threshold
+(`study_config.SECONDARY_CUT`, ≥5.7%) instead of the primary diabetes threshold (≥6.5%) — cohort
+membership is unchanged, only who counts as positive. Positives jump 12.7x (106 → 1,348), but
+AUROC drops for every BMI/CBC model (e.g. demographics+BMI+CBC: 0.835 → 0.798) since prediabetes
+is a subtler physiological change than frank diabetes. The payoff is statistical, not predictive:
+with that many more events, 100 full-pipeline PSU-bootstrap replicates newly or more clearly
+resolve three of four paired AUROC-gain comparisons that were inconclusive in the primary
+106-event analysis — CBC beats BMI alone ([0.023, 0.045], first time this project has excluded
+zero), logistic beats AdaBoost ([0.015, 0.042]), and ensemble beats AdaBoost more clearly
+([0.016, 0.038]) — while ensemble-vs-logistic tightens to an essentially exact tie
+([-0.005, 0.004]). This confirms the project's standing diagnosis that **106 events, not model
+choice, is the binding constraint on statistical resolution** — it is not evidence that the
+primary diabetes-detection model improved, since it answers a different (milder,
+prediabetes-inclusive) clinical question at lower absolute AUROC. Exploratory only; does not
+change the locked outcome definition or any published headline number.
+
+</details>
+
+<details>
 <summary>Literature, writing and project management</summary>
 
 - [Literature evidence and source notes](literature/README.md)
@@ -198,7 +271,17 @@ Known Uncertainties), not as an interchangeable primary outcome.
    `LBXSGL`, ~6,357 measurements, non-fasting), which we have not yet incorporated; it is not
    interchangeable with the fasting or diagnostic definitions without reviewing specimen/fasting-
    status differences first. Self-reported diagnosis is used to define eligibility (now an
-   exclusion, not just a stratifier) rather than a third interchangeable outcome.
+   exclusion, not just a stratifier) rather than a third interchangeable outcome. The CBC feature
+   block in the same file went through its own history: 11 features → 21 (2026-11-23) → the
+   current **locked 9-feature reduced block** (Phase 15 Step 3, 2026-11-23) — RBC, hemoglobin,
+   hematocrit, MCV, WBC, platelet count, lymphocyte %, monocyte %, eosinophil %. Every one of the
+   12 dropped columns (relative to the 21-feature stage) was confirmed by direct marginal-addition
+   testing (add it back alone, measure AUROC over 25 repeated folds) to add no measurable gain —
+   see `docs/findings/feature_reduction.md` and the full-pipeline initial-vs-reduced validation in
+   `docs/findings/phase2_feature_variant_comparison.md`. Income (`INDFMPIR`) was also dropped from
+   the demographic baseline on the same evidence (near-zero/negative marginal AUROC, confirmed
+   against the pre-existing permutation-importance finding). `scripts/analysis/study_config.py`
+   still carries the original 21-feature/income block explicitly as `*_INITIAL` for comparison.
 2. **Decision threshold, not just accuracy:** because of the cost asymmetry
    between an unnecessary test and a missed diagnosis, the model must be
    evaluated on sensitivity/NPV at clinically defensible thresholds, not
@@ -282,10 +365,10 @@ open items.
 
 Notebook 02's cohort now follows `study_config.py` (4,619 examined adults 20+, 106 positive at
 HbA1c ≥6.5%). It compares age-only logistic regression (held-out AUROC **0.605**), age + sex
-logistic regression (**0.562**), CBC + age + sex logistic regression (**0.619**), age + sex
-random forest (**0.536**), and CBC + age + sex random forest (**0.630**). CBC adds discrimination
-beyond age + sex in both model families (+0.057 logistic, +0.094 forest), using the team's
-21-feature CBC block (see Known Uncertainty #1). These remain
+logistic regression (**0.562**), CBC + age + sex logistic regression (**0.650**), age + sex
+random forest (**0.536**), and CBC + age + sex random forest (**0.642**). CBC adds discrimination
+beyond age + sex in both model families (+0.088 logistic, +0.106 forest), using the team's
+Phase 15 locked 9-feature CBC block (see Known Uncertainty #1). These remain
 unweighted single-split exploratory results; the notebook now prints its AUROC/threshold tables
 inline rather than exporting them to `results/baseline/` — the CSVs/figures still sitting in
 that folder are a historical snapshot from an earlier version of this notebook and are not
@@ -333,11 +416,11 @@ SDMVSTRA/SDMVPSU guide splitting and conditional jackknife variance, not predict
 Class balancing is removed; imputation/scaling remain unweighted within training folds.
 The full survey design is retained before selecting the analytic domain.
 
-Calibrated weighted AUROC is 0.720 for demographics and 0.770 for CBC + demographics logistic
+Calibrated weighted AUROC is 0.717 for demographics and 0.786 for CBC + demographics logistic
 regression. The paired conditional interval for the gain includes zero. Mean calibrated CBC
-logistic risk is 1.98%, close to weighted prevalence; this alone does not establish calibration.
-Its outer-fold policy evaluation defers 1,152 observed tests and misses 6/106 positive labels
-(92.8% weighted sensitivity). This does not establish safe clinical deferral. Intervals condition
+logistic risk is 2.00%, close to weighted prevalence; this alone does not establish calibration.
+Its outer-fold policy evaluation defers 1,305 observed tests and misses 4/106 positive labels
+(95.1% weighted sensitivity). This does not establish safe clinical deferral. Intervals condition
 on fitted scores/thresholds and exclude training variability; independent validation remains.
 
 ### Research extension: BMI, robustness and independent evaluation (notebooks 05–06)
@@ -359,9 +442,45 @@ models are in `results/research_extension/`; these joblib files are trusted proj
 files to load from unknown sources. Notebooks 05–06 display completed results; notebook 05
 can rerun the full analysis by changing `RUN_ANALYSIS`.
 
-CBC adds 0.010 AUROC beyond demographics+BMI in the current cohort, with an exploratory
+CBC adds 0.019 AUROC beyond demographics+BMI in the current cohort, with an exploratory
 full-refit interval spanning zero. Ranking improves in the independent earlier cycle while
-probability error worsens. See [results](docs/findings/research_extension_results.md),
+probability error worsens. **Phase 15 Step 5** added six more model families (gradient
+boosting, AdaBoost, RBF-kernel SVM, Naive Bayes — all verified to support `sample_weight` in
+`fit()` to match this project's survey-weighted convention; `KNeighborsClassifier` doesn't and
+was excluded) alongside the existing logistic/forest pair, same matched folds/weights/
+calibration (Table 1b in the results doc). Properly regularized logistic regression
+outperforms every alternative tested; AdaBoost is the strongest alternative (0.821 vs.
+logistic's 0.835 AUROC with CBC) and clearly beats gradient boosting (0.801) and forest
+(0.781); RBF SVM and Naive Bayes perform substantially worse with untuned defaults
+(0.57–0.69). More flexible model families don't recover extra discrimination on this small,
+already-reduced feature set.
+
+An exploratory SVM hyperparameter sensitivity (Table 1c, pre-specified configurations, not
+grid-searched) checked whether `class_weight='balanced'` and a wider kernel — inspired by an
+unrelated prior project — could close that gap: class balancing alone helps substantially
+(0.692→0.769 AUROC), but directly porting that project's tuned `C=100, gamma=1` is actively
+harmful here (0.445, worse than chance) — a hyperparameter pair tuned for different data can be
+destructive elsewhere, which is exactly why hyperparameters aren't selected from results in
+this pipeline. Neither configuration replaces SVM's default in the headline comparison.
+
+A follow-up extended class balancing to **all 6 model families** (Table 1d), using one
+mechanism — a class-balance sample weight multiplied into the survey weight — uniform even for
+models with no native `class_weight` parameter. The effect is highly model-dependent: SVM
+improves dramatically (+0.074 AUROC, confirming the result above via a second, independent
+implementation) and random forest improves meaningfully (+0.019); gradient boosting improves
+modestly (+0.005); logistic regression, AdaBoost and Naive Bayes are essentially unchanged
+(within ±0.003). None of the balanced variants replace any model's default in the headline
+comparison.
+
+A soft-voting **ensemble of logistic + AdaBoost** was added to the headline comparison and the
+100-replicate bootstrap. Point estimates rank ensemble (0.846) > logistic (0.835) > AdaBoost
+(0.821), but paired bootstrap intervals show **only the ensemble-vs-AdaBoost gap is
+distinguishable from noise, and only just** (95% interval 0.003–0.065); logistic-vs-AdaBoost
+(−0.042 to 0.101) and ensemble-vs-logistic (−0.058 to 0.046) both include zero. The Phase 15
+Step 6 final holdout reinforces this: on genuinely untouched data, AdaBoost actually
+outperformed logistic (0.829 vs. 0.766 AUROC). Honest read: these three models perform
+comparably, and this project doesn't have enough events (106) to confidently declare one best.
+See [results](docs/findings/research_extension_results.md),
 [literature matrix](literature/extension_evidence_matrix.md),
 [draft text](writing/drafts/Research_Extension_Methods_Results.md) and
 [publication assessment](docs/findings/publication_readiness.md). These results do not establish

@@ -1,0 +1,466 @@
+{
+  "candidate_14_drop_algebraic": [
+    "LBXRBCSI",
+    "LBXHGB",
+    "LBXHCT",
+    "LBXMCVSI",
+    "LBXRDW",
+    "LBXNRBC",
+    "LBXWBCSI",
+    "LBXPLTSI",
+    "LBXMPSI",
+    "LBXLYPCT",
+    "LBXNEPCT",
+    "LBXMOPCT",
+    "LBXEOPCT",
+    "LBXBAPCT"
+  ],
+  "algebraically_redundant_dropped": [
+    "LBXMCHSI",
+    "LBXMC",
+    "LBDLYMNO",
+    "LBDNENO",
+    "LBDMONO",
+    "LBDEONO",
+    "LBDBANO"
+  ],
+  "candidate_13_drop_algebraic_and_baso": [
+    "LBXRBCSI",
+    "LBXHGB",
+    "LBXHCT",
+    "LBXMCVSI",
+    "LBXRDW",
+    "LBXNRBC",
+    "LBXWBCSI",
+    "LBXPLTSI",
+    "LBXMPSI",
+    "LBXLYPCT",
+    "LBXNEPCT",
+    "LBXMOPCT",
+    "LBXEOPCT"
+  ],
+  "compositionally_redundant_dropped": [
+    "LBXBAPCT"
+  ],
+  "vif_top4": {
+    "full_21": [
+      {
+        "variable": "LBXNEPCT",
+        "VIF": 25982.810387381658
+      },
+      {
+        "variable": "LBXLYPCT",
+        "VIF": 22005.505284877792
+      },
+      {
+        "variable": "LBXEOPCT",
+        "VIF": 1345.24927329781
+      },
+      {
+        "variable": "LBXMOPCT",
+        "VIF": 1336.0685785751325
+      }
+    ],
+    "candidate_14_drop_algebraic": [
+      {
+        "variable": "LBXNEPCT",
+        "VIF": 25896.461529942208
+      },
+      {
+        "variable": "LBXLYPCT",
+        "VIF": 21916.23182245976
+      },
+      {
+        "variable": "LBXEOPCT",
+        "VIF": 1332.5793997909343
+      },
+      {
+        "variable": "LBXMOPCT",
+        "VIF": 1326.217280440046
+      }
+    ],
+    "candidate_13_drop_algebraic_and_baso": [
+      {
+        "variable": "LBXNEPCT",
+        "VIF": 809.3657163545296
+      },
+      {
+        "variable": "LBXLYPCT",
+        "VIF": 687.5692440663465
+      },
+      {
+        "variable": "LBXHCT",
+        "VIF": 146.28933870951482
+      },
+      {
+        "variable": "LBXRBCSI",
+        "VIF": 135.28187578169442
+      }
+    ]
+  },
+  "l1_full_21": {
+    "knee_C": 0.31622776601683794,
+    "knee_weighted_AUROC": 0.8076867120510272,
+    "best_weighted_AUROC": 0.8091941980296516,
+    "kept_in_ge3_of_5_folds": [
+      "LBXRBCSI",
+      "LBXWBCSI",
+      "LBXPLTSI",
+      "LBXLYPCT",
+      "LBXMCVSI",
+      "LBXMOPCT",
+      "LBXMPSI",
+      "LBXEOPCT",
+      "LBDLYMNO",
+      "LBDMONO"
+    ],
+    "dropped_in_lt3_of_5_folds": [
+      "LBXHGB",
+      "LBXHCT",
+      "LBXMC",
+      "LBXNEPCT",
+      "LBXBAPCT",
+      "LBDNENO",
+      "LBXMCHSI",
+      "LBXRDW",
+      "LBXNRBC",
+      "LBDEONO",
+      "LBDBANO"
+    ]
+  },
+  "l1_candidate_13": {
+    "knee_C": 0.31622776601683794,
+    "knee_weighted_AUROC": 0.8096193558129571,
+    "best_weighted_AUROC": 0.8108418074104289,
+    "kept_in_ge3_of_5_folds": [
+      "LBXRBCSI",
+      "LBXMCVSI",
+      "LBXWBCSI",
+      "LBXPLTSI",
+      "LBXLYPCT",
+      "LBXMOPCT",
+      "LBXEOPCT",
+      "LBXMPSI"
+    ],
+    "dropped_in_lt3_of_5_folds": [
+      "LBXHGB",
+      "LBXHCT",
+      "LBXNEPCT",
+      "LBXRDW",
+      "LBXNRBC"
+    ]
+  },
+  "stability_check": {
+    "seeds": [
+      42,
+      1,
+      2,
+      3,
+      4
+    ],
+    "total_folds": 25,
+    "weighted_AUROC_mean": 0.826419677813134,
+    "weighted_AUROC_sd": 0.04855002940596481,
+    "stably_kept_rate_ge_60pct": [
+      "LBXRBCSI",
+      "LBXMCVSI",
+      "LBXWBCSI",
+      "LBXLYPCT",
+      "LBXMOPCT",
+      "LBXPLTSI",
+      "LBXEOPCT"
+    ],
+    "unstable_20_to_60pct": [
+      "LBXRDW",
+      "LBXNRBC",
+      "LBXMPSI"
+    ]
+  },
+  "hgb_hct_face_validity": [
+    {
+      "comparison": "hgb_hct_face_validity",
+      "feature_set": "knee_8",
+      "n_cbc_features": 8,
+      "mean_weighted_AUROC": 0.8210690317601369,
+      "sd_weighted_AUROC": 0.06035245285215946
+    },
+    {
+      "comparison": "hgb_hct_face_validity",
+      "feature_set": "knee_8_plus_hgb_hct",
+      "n_cbc_features": 10,
+      "mean_weighted_AUROC": 0.8209663037765884,
+      "sd_weighted_AUROC": 0.06048393245532751
+    },
+    {
+      "comparison": "hgb_hct_face_validity",
+      "feature_set": "candidate_13_full",
+      "n_cbc_features": 13,
+      "mean_weighted_AUROC": 0.8076809415144701,
+      "sd_weighted_AUROC": 0.059057594329626255
+    }
+  ],
+  "cbc_reduced_9": [
+    "LBXRBCSI",
+    "LBXHGB",
+    "LBXHCT",
+    "LBXMCVSI",
+    "LBXWBCSI",
+    "LBXPLTSI",
+    "LBXLYPCT",
+    "LBXMOPCT",
+    "LBXEOPCT"
+  ],
+  "all_feature_ablation": [
+    {
+      "block_removed": "age",
+      "mean_weighted_AUROC": 0.7213972598151924,
+      "sd_weighted_AUROC": 0.04790850833055542,
+      "auroc_cost": 0.10261786554008434
+    },
+    {
+      "block_removed": "BMI",
+      "mean_weighted_AUROC": 0.7827603365548254,
+      "sd_weighted_AUROC": 0.053159437347239887,
+      "auroc_cost": 0.041254788800451414
+    },
+    {
+      "block_removed": "CBC_reduced",
+      "mean_weighted_AUROC": 0.7989622308216058,
+      "sd_weighted_AUROC": 0.06655374463822056,
+      "auroc_cost": 0.02505289453367099
+    },
+    {
+      "block_removed": "race_ethnicity",
+      "mean_weighted_AUROC": 0.8084191380563913,
+      "sd_weighted_AUROC": 0.06117179554274641,
+      "auroc_cost": 0.01559598729888545
+    },
+    {
+      "block_removed": "sex",
+      "mean_weighted_AUROC": 0.8208710875120175,
+      "sd_weighted_AUROC": 0.04997646633782472,
+      "auroc_cost": 0.0031440378432592286
+    },
+    {
+      "block_removed": "none (full model)",
+      "mean_weighted_AUROC": 0.8240151253552768,
+      "sd_weighted_AUROC": 0.05822672687610132,
+      "auroc_cost": 0.0
+    },
+    {
+      "block_removed": "education",
+      "mean_weighted_AUROC": 0.8253409907560071,
+      "sd_weighted_AUROC": 0.06574488834974782,
+      "auroc_cost": -0.0013258654007303194
+    },
+    {
+      "block_removed": "income",
+      "mean_weighted_AUROC": 0.8306591233004044,
+      "sd_weighted_AUROC": 0.04749367765284006,
+      "auroc_cost": -0.0066439979451276
+    }
+  ],
+  "all_feature_ablation_repeated": [
+    {
+      "block_removed": "age",
+      "mean_auroc_cost": 0.09617839389939113,
+      "sd_auroc_cost": 0.006298840475153256,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "BMI",
+      "mean_auroc_cost": 0.03609001738864222,
+      "sd_auroc_cost": 0.0037095018209747214,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "CBC_reduced",
+      "mean_auroc_cost": 0.022716426740172914,
+      "sd_auroc_cost": 0.005365825486911233,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "race_ethnicity",
+      "mean_auroc_cost": 0.017085739008244526,
+      "sd_auroc_cost": 0.0021533122959296923,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "sex",
+      "mean_auroc_cost": 0.00298855669231608,
+      "sd_auroc_cost": 0.0020656655851311653,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "income",
+      "mean_auroc_cost": 0.0006771399750877816,
+      "sd_auroc_cost": 0.0038095015260271817,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "none (full model)",
+      "mean_auroc_cost": 0.0,
+      "sd_auroc_cost": 0.0,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    },
+    {
+      "block_removed": "education",
+      "mean_auroc_cost": -0.00022474215714511913,
+      "sd_auroc_cost": 0.001395860233943003,
+      "n_folds": 5,
+      "full_model_mean_weighted_AUROC": 0.8363533857080796,
+      "full_model_sd_weighted_AUROC": 0.010349685086754469
+    }
+  ],
+  "final_candidates_comparison": [
+    {
+      "spec": "original_full_27feat",
+      "n_features": 27,
+      "mean_weighted_AUROC": 0.8240546643800696,
+      "sd_weighted_AUROC": 0.05099505487764538,
+      "n_folds": 25
+    },
+    {
+      "spec": "reduced_keep_education",
+      "n_features": 14,
+      "mean_weighted_AUROC": 0.8356762457329922,
+      "sd_weighted_AUROC": 0.04395427326237559,
+      "n_folds": 25
+    },
+    {
+      "spec": "reduced_drop_education",
+      "n_features": 13,
+      "mean_weighted_AUROC": 0.8313245928808926,
+      "sd_weighted_AUROC": 0.04640035086037537,
+      "n_folds": 25
+    },
+    {
+      "spec": "income_only_dropped_cbc21",
+      "n_features": 26,
+      "mean_weighted_AUROC": 0.8236844431009439,
+      "sd_weighted_AUROC": 0.04612981797194984,
+      "n_folds": 25
+    },
+    {
+      "spec": "education_only_dropped_cbc21",
+      "n_features": 26,
+      "mean_weighted_AUROC": 0.8238401834085586,
+      "sd_weighted_AUROC": 0.05521522438228806,
+      "n_folds": 25
+    },
+    {
+      "spec": "both_income_and_education_dropped_cbc21",
+      "n_features": 25,
+      "mean_weighted_AUROC": 0.8186113111019059,
+      "sd_weighted_AUROC": 0.047919603316163746,
+      "n_folds": 25
+    }
+  ],
+  "marginal_addition_test": [
+    {
+      "feature": "LBDMONO",
+      "mean_weighted_AUROC": 0.8366217446602597,
+      "sd_weighted_AUROC": 0.04789484142351202,
+      "auroc_gain": 0.0002683589521800256,
+      "gain_sd_ratio": 0.0056030867668409425
+    },
+    {
+      "feature": "LBDLYMNO",
+      "mean_weighted_AUROC": 0.8365457929453618,
+      "sd_weighted_AUROC": 0.04815455211708495,
+      "auroc_gain": 0.00019240723728208842,
+      "gain_sd_ratio": 0.00399561887346105
+    },
+    {
+      "feature": "(base only)",
+      "mean_weighted_AUROC": 0.8363533857080797,
+      "sd_weighted_AUROC": 0.04870423211766698,
+      "auroc_gain": 0.0,
+      "gain_sd_ratio": 0.0
+    },
+    {
+      "feature": "LBXNEPCT",
+      "mean_weighted_AUROC": 0.8362823959321064,
+      "sd_weighted_AUROC": 0.048680207318644655,
+      "auroc_gain": -7.098977597330691e-05,
+      "gain_sd_ratio": -0.0014582882835447093
+    },
+    {
+      "feature": "LBDNENO",
+      "mean_weighted_AUROC": 0.8361073770551266,
+      "sd_weighted_AUROC": 0.048576094254992076,
+      "auroc_gain": -0.00024600865295310026,
+      "gain_sd_ratio": -0.005064397554519698
+    },
+    {
+      "feature": "LBXMCHSI",
+      "mean_weighted_AUROC": 0.8360122323901649,
+      "sd_weighted_AUROC": 0.04851707008425115,
+      "auroc_gain": -0.00034115331791484405,
+      "gain_sd_ratio": -0.007031614178729722
+    },
+    {
+      "feature": "LBXMC",
+      "mean_weighted_AUROC": 0.8357905175380062,
+      "sd_weighted_AUROC": 0.04882741672973207,
+      "auroc_gain": -0.0005628681700735605,
+      "gain_sd_ratio": -0.011527707336825335
+    },
+    {
+      "feature": "LBDEONO",
+      "mean_weighted_AUROC": 0.8353812699179899,
+      "sd_weighted_AUROC": 0.04858618329761792,
+      "auroc_gain": -0.0009721157900898225,
+      "gain_sd_ratio": -0.020008070692341937
+    },
+    {
+      "feature": "LBXRDW",
+      "mean_weighted_AUROC": 0.8347099067912034,
+      "sd_weighted_AUROC": 0.04916709411696177,
+      "auroc_gain": -0.0016434789168763286,
+      "gain_sd_ratio": -0.033426399228856554
+    },
+    {
+      "feature": "LBXMPSI",
+      "mean_weighted_AUROC": 0.8345396982066937,
+      "sd_weighted_AUROC": 0.049851177616601766,
+      "auroc_gain": -0.0018136875013859965,
+      "gain_sd_ratio": -0.036382039263641995
+    },
+    {
+      "feature": "LBXBAPCT",
+      "mean_weighted_AUROC": 0.8345019098237388,
+      "sd_weighted_AUROC": 0.05013790440262113,
+      "auroc_gain": -0.0018514758843408696,
+      "gain_sd_ratio": -0.03692766792710382
+    },
+    {
+      "feature": "LBDBANO",
+      "mean_weighted_AUROC": 0.834350647844019,
+      "sd_weighted_AUROC": 0.050857736316324446,
+      "auroc_gain": -0.0020027378640606885,
+      "gain_sd_ratio": -0.03937921758066618
+    },
+    {
+      "feature": "LBXNRBC",
+      "mean_weighted_AUROC": 0.8322554444134748,
+      "sd_weighted_AUROC": 0.049452289005704225,
+      "auroc_gain": -0.004097941294604945,
+      "gain_sd_ratio": -0.0828665644603884
+    }
+  ]
+}

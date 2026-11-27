@@ -22,7 +22,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier, VotingClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.metrics import roc_auc_score, average_precision_score, log_loss
 import joblib
@@ -35,12 +37,64 @@ RED=cfg.RED_CELL_FEATURES
 WHITE=cfg.WHITE_CELL_PLATELET_FEATURES
 NUM=cfg.NUMERIC_DEMOGRAPHICS
 CAT=cfg.CATEGORICAL_DEMOGRAPHICS
-PRIMARY={'demographics':(NUM,False),'demographics_bmi':(NUM+['BMXBMI'],False),
-         'demographics_bmi_cbc':(NUM+['BMXBMI']+RED+WHITE,False)}
-BLOCKS={'demographics_bmi_red':(NUM+['BMXBMI']+RED,False),
-        'demographics_bmi_white_platelet':(NUM+['BMXBMI']+WHITE,False)}
-FORESTS={'demographics_bmi_forest':(NUM+['BMXBMI'],True),
-         'demographics_bmi_cbc_forest':(NUM+['BMXBMI']+RED+WHITE,True)}
+PRIMARY={'demographics':(NUM,'logistic'),'demographics_bmi':(NUM+['BMXBMI'],'logistic'),
+         'demographics_bmi_cbc':(NUM+['BMXBMI']+RED+WHITE,'logistic')}
+BLOCKS={'demographics_bmi_red':(NUM+['BMXBMI']+RED,'logistic'),
+        'demographics_bmi_white_platelet':(NUM+['BMXBMI']+WHITE,'logistic')}
+FORESTS={'demographics_bmi_forest':(NUM+['BMXBMI'],'forest'),
+         'demographics_bmi_cbc_forest':(NUM+['BMXBMI']+RED+WHITE,'forest')}
+# Phase 15 Step 5: gradient boosting added alongside the existing logistic/forest pair, same
+# matched folds/weights/calibration (via the shared nested() path below), for a comparable --
+# not a one-off -- evaluation. Conservative hyperparameters (shallow trees, subsampling) guard
+# against overfitting on this small (~4,600-row) cohort.
+GBMS={'demographics_bmi_gbm':(NUM+['BMXBMI'],'gbm'),
+      'demographics_bmi_cbc_gbm':(NUM+['BMXBMI']+RED+WHITE,'gbm')}
+# Phase 15 Step 5 (continued): SVM plus two classic baselines, same matched folds/weights/
+# calibration. All three must support sample_weight in fit() to fit the project's
+# population-risk (survey-weighted, no class balancing) convention -- verified first
+# (KNeighborsClassifier does not and was dropped for that reason). RBF SVM tests a
+# genuinely different (non-tree) nonlinear family; AdaBoost is a second, differently-built
+# boosting method (reweighting, not gradient descent); Naive Bayes is a cheap probabilistic
+# baseline despite its unrealistic feature-independence assumption on this collinear panel.
+OTHERS={'demographics_bmi_svm':(NUM+['BMXBMI'],'svm'),
+        'demographics_bmi_cbc_svm':(NUM+['BMXBMI']+RED+WHITE,'svm'),
+        'demographics_bmi_adaboost':(NUM+['BMXBMI'],'adaboost'),
+        'demographics_bmi_cbc_adaboost':(NUM+['BMXBMI']+RED+WHITE,'adaboost'),
+        'demographics_bmi_nb':(NUM+['BMXBMI'],'nb'),
+        'demographics_bmi_cbc_nb':(NUM+['BMXBMI']+RED+WHITE,'nb')}
+# Soft-voting ensemble of the two strongest model families from Table 1b (logistic, AdaBoost),
+# full feature set only -- see build()'s 'ensemble_la' branch. Included in the headline primary
+# comparison (unlike the sensitivity tables above) because this is a real candidate model, not
+# an exploratory check of a single lever.
+ENSEMBLE={'demographics_bmi_cbc_ensemble':(NUM+['BMXBMI']+RED+WHITE,'ensemble_la')}
+
+# Exploratory SVM hyperparameter sensitivity (not part of the headline comparison above, and
+# not adopted as a replacement for demographics_bmi_cbc_svm's default hyperparameters): a small,
+# PRE-SPECIFIED set of configurations, reported in full rather than searched-and-selected, to
+# stay inside this file's stated discipline of no hyperparameter selection from results. Default
+# RBF SVM (C=1, gamma='scale', no class weighting) underperformed every other model family
+# (see Table 1b); informed by a separate prior project's notebook (class_weight='balanced' plus
+# GridSearchCV found C=100, gamma=1 much stronger there), this checks whether the same two
+# levers -- class balancing and a more flexible kernel -- help here too, same matched folds/
+# weights/calibration as the main comparison, on the full demographics_bmi_cbc feature set only.
+SVM_SENSITIVITY={'demographics_bmi_cbc_svm_balanced':(NUM+['BMXBMI']+RED+WHITE,'svm_balanced'),
+                 'demographics_bmi_cbc_svm_c10':(NUM+['BMXBMI']+RED+WHITE,'svm_c10'),
+                 'demographics_bmi_cbc_svm_c100_g1':(NUM+['BMXBMI']+RED+WHITE,'svm_c100_g1')}
+
+# Exploratory class-balancing sensitivity (not part of the headline comparison; does not
+# replace any model's default fitting in Table 1b): every one of the 6 model families, same
+# demographics_bmi_cbc feature set, same matched folds/weights/calibration, refit with a
+# class-balance weight (sklearn's 'balanced' formula) multiplied into the existing survey
+# sample_weight -- a single mechanism applied identically across all 6, including the 3 model
+# types (gbm, adaboost, nb) that have no native class_weight parameter at all. Directly answers
+# "does class balancing improve results" for the whole model-family comparison, not just SVM.
+CLASS_BALANCE_SENSITIVITY={
+    'demographics_bmi_cbc_logistic_cb':(NUM+['BMXBMI']+RED+WHITE,'logistic_cb'),
+    'demographics_bmi_cbc_forest_cb':(NUM+['BMXBMI']+RED+WHITE,'forest_cb'),
+    'demographics_bmi_cbc_gbm_cb':(NUM+['BMXBMI']+RED+WHITE,'gbm_cb'),
+    'demographics_bmi_cbc_adaboost_cb':(NUM+['BMXBMI']+RED+WHITE,'adaboost_cb'),
+    'demographics_bmi_cbc_svm_cb':(NUM+['BMXBMI']+RED+WHITE,'svm_cb'),
+    'demographics_bmi_cbc_nb_cb':(NUM+['BMXBMI']+RED+WHITE,'nb_cb')}
 
 def read(path):
     x=pd.read_sas(path,format='xport')
@@ -77,15 +131,55 @@ def folds_for(d,n=5,seed=42):
         assert d.iloc[a].target.nunique()==d.iloc[b].target.nunique()==2
     return splits
 
-def build(nums,forest=False):
+def build(nums,model='logistic'):
+    # A trailing '_cb' means "also multiply a class-balance weight into sample_weight at fit
+    # time" (see fit() below) -- a single mechanism that works even for classifiers with no
+    # native class_weight parameter (GradientBoostingClassifier, AdaBoostClassifier, GaussianNB),
+    # so every model family in the class-balancing sensitivity check uses the identical approach.
+    model=model[:-3] if model.endswith('_cb') else model
     pre=ColumnTransformer([
         ('numeric',Pipeline([('impute',SimpleImputer(strategy='median',add_indicator=True)),('scale',StandardScaler())]),nums),
         *cfg.categorical_transformer_entries()])
-    clf=(RandomForestClassifier(n_estimators=300,min_samples_leaf=5,random_state=42,n_jobs=1)
-         if forest else LogisticRegression(solver='liblinear',max_iter=2000))
+    if model=='forest':
+        clf=RandomForestClassifier(n_estimators=300,min_samples_leaf=5,random_state=42,n_jobs=1)
+    elif model=='gbm':
+        clf=GradientBoostingClassifier(n_estimators=200,max_depth=2,learning_rate=0.05,
+            min_samples_leaf=10,subsample=0.8,random_state=42)
+    elif model=='svm':
+        clf=SVC(kernel='rbf',probability=True,random_state=42)
+    elif model=='svm_balanced':
+        clf=SVC(kernel='rbf',probability=True,class_weight='balanced',random_state=42)
+    elif model=='svm_c10':
+        clf=SVC(kernel='rbf',probability=True,class_weight='balanced',C=10,gamma='scale',random_state=42)
+    elif model=='svm_c100_g1':
+        clf=SVC(kernel='rbf',probability=True,class_weight='balanced',C=100,gamma=1,random_state=42)
+    elif model=='adaboost':
+        clf=AdaBoostClassifier(n_estimators=200,learning_rate=0.5,random_state=42)
+    elif model=='ensemble_la':
+        # Soft-voting blend of the two strongest model families (Table 1b): logistic and
+        # AdaBoost. VotingClassifier forwards sample_weight to each sub-estimator's own fit()
+        # (both already support it) and averages their predict_proba outputs.
+        clf=VotingClassifier(estimators=[
+            ('logistic',LogisticRegression(solver='liblinear',max_iter=2000)),
+            ('adaboost',AdaBoostClassifier(n_estimators=200,learning_rate=0.5,random_state=42))],
+            voting='soft')
+    elif model=='nb':
+        clf=GaussianNB()
+    else:
+        clf=LogisticRegression(solver='liblinear',max_iter=2000)
     steps=[('pre',pre)]
-    if not forest: steps.append(('sparse',FunctionTransformer(csr_matrix,accept_sparse=True)))
+    if model=='logistic': steps.append(('sparse',FunctionTransformer(csr_matrix,accept_sparse=True)))
     return Pipeline(steps+[('clf',clf)])
+
+def class_balance_weight(y):
+    # sklearn's class_weight='balanced' formula (n_samples / (n_classes * class_count)),
+    # applied as an explicit sample_weight factor so it works uniformly across every model --
+    # including ones with no native class_weight parameter.
+    y=np.asarray(y)
+    classes,counts=np.unique(y,return_counts=True)
+    per_class=len(y)/(len(classes)*counts)
+    lookup=dict(zip(classes,per_class))
+    return np.array([lookup[v] for v in y])
 
 def fit(d,indices,spec,multiplicity):
     # Expanding sampled PSU multiplicities refits even preprocessing under resampling.
@@ -94,6 +188,7 @@ def fit(d,indices,spec,multiplicity):
     if z.target.nunique()!=2: raise ValueError('resampled training set has one class')
     model=build(*spec)
     weights=z._weight.to_numpy()
+    if spec[1].endswith('_cb'): weights=weights*class_balance_weight(z.target.to_numpy())
     model.fit(z[spec[0]+CAT],z.target,clf__sample_weight=weights/weights.mean())
     return model
 
@@ -192,7 +287,8 @@ def jackknife(pred,full):
                 upper=min(1,value+critical*se) if key!='log_loss' else value+critical*se,design_df=dfree))
     return pd.DataFrame(rows)
 
-def bootstrap(d,full,count):
+def bootstrap(d,full,count,specs=None):
+    if specs is None: specs=PRIMARY
     outer=folds_for(d); rng=np.random.default_rng(20261102)
     design=full.loc[full._weight.gt(0),['SDMVSTRA','SDMVPSU']].drop_duplicates()
     assert design.groupby('SDMVSTRA').size().eq(2).all()
@@ -203,7 +299,7 @@ def bootstrap(d,full,count):
             chosen=rng.choice(hg.SDMVPSU.to_numpy())
             mult[d.SDMVSTRA.eq(h)&d.SDMVPSU.eq(chosen)]=2
         try:
-            predictions=nested(d,outer=outer,multiplicity=mult)
+            predictions=nested(d,specs=specs,outer=outer,multiplicity=mult)
             for name,g in predictions.groupby('model'):
                 rows.append(dict(replicate=rep,model=name,**metrics(g)))
         except ValueError as e:
@@ -222,6 +318,16 @@ def bootstrap(d,full,count):
     delta=wide.demographics_bmi_cbc-wide.demographics_bmi
     summaries.append(dict(model='CBC_minus_BMI_AUROC',metric='AUROC_gain',successful_replicates=len(delta),
                           lower=delta.quantile(.025),upper=delta.quantile(.975)))
+    # Paired model-family comparisons (logistic vs. its strongest alternative, AdaBoost; and
+    # the logistic+AdaBoost ensemble vs. each) -- answers whether the point-estimate gaps in
+    # Table 1b are distinguishable from PSU-resampling noise, not just "which number is bigger".
+    for a,b_name,label in [('demographics_bmi_cbc','demographics_bmi_cbc_adaboost','Logistic_minus_AdaBoost_AUROC'),
+                           ('demographics_bmi_cbc_ensemble','demographics_bmi_cbc','Ensemble_minus_Logistic_AUROC'),
+                           ('demographics_bmi_cbc_ensemble','demographics_bmi_cbc_adaboost','Ensemble_minus_AdaBoost_AUROC')]:
+        if a in wide.columns and b_name in wide.columns:
+            pair_delta=wide[a]-wide[b_name]
+            summaries.append(dict(model=label,metric='AUROC_gain',successful_replicates=len(pair_delta.dropna()),
+                                  lower=pair_delta.quantile(.025),upper=pair_delta.quantile(.975)))
     pd.DataFrame(summaries).to_csv(OUT/'full_refit_bootstrap_intervals.csv',index=False)
     return len(failures)
 
@@ -302,12 +408,28 @@ def main(count=100):
     missing=d[NUM+CAT+['BMXBMI']+CBC].isna().mean().rename('missing_fraction')
     missing.to_csv(OUT/'primary_predictor_missingness.csv')
     results=[]
-    print('Primary BMI/block/forest comparison',flush=True)
-    pred=nested(d,{**PRIMARY,**BLOCKS,**FORESTS},verbose=True)
+    print('Primary BMI/block/forest/gbm/other-model comparison',flush=True)
+    pred=nested(d,{**PRIMARY,**BLOCKS,**FORESTS,**GBMS,**OTHERS,**ENSEMBLE},verbose=True)
     pred.to_csv(OUT/'primary_extension_predictions.csv',index=False)
     results.append(summarise(pred,'primary'))
     jackknife(pred,full).to_csv(OUT/'primary_conditional_intervals.csv',index=False)
     utility(pred[pred.model.isin(PRIMARY)])
+    print('SVM hyperparameter sensitivity (exploratory; not part of the headline comparison)',flush=True)
+    svm_pred=nested(d,SVM_SENSITIVITY,verbose=True)
+    svm_pred.to_csv(OUT/'svm_sensitivity_predictions.csv',index=False)
+    svm_summary=summarise(pd.concat([pred[pred.model.eq('demographics_bmi_cbc_svm')],svm_pred],ignore_index=True),
+                          'svm_sensitivity')
+    svm_summary.to_csv(OUT/'svm_sensitivity_summary.csv',index=False)
+    print(svm_summary.loc[svm_summary.stage.eq('calibrated'),['model','AUROC','AP','Brier','sensitivity']].to_string(index=False),flush=True)
+    print('Class-balancing sensitivity (exploratory; not part of the headline comparison)',flush=True)
+    cb_pred=nested(d,CLASS_BALANCE_SENSITIVITY,verbose=True)
+    cb_pred.to_csv(OUT/'class_balance_sensitivity_predictions.csv',index=False)
+    unbalanced_names=['demographics_bmi_cbc','demographics_bmi_cbc_forest','demographics_bmi_cbc_gbm',
+                      'demographics_bmi_cbc_adaboost','demographics_bmi_cbc_svm','demographics_bmi_cbc_nb']
+    cb_summary=summarise(pd.concat([pred[pred.model.isin(unbalanced_names)],cb_pred],ignore_index=True),
+                         'class_balance_sensitivity')
+    cb_summary.to_csv(OUT/'class_balance_sensitivity_summary.csv',index=False)
+    print(cb_summary.loc[cb_summary.stage.eq('calibrated'),['model','AUROC','AP','Brier','sensitivity']].to_string(index=False),flush=True)
     subgroups=[]
     for variable,bins in [('sex',d.RIAGENDR.map({1:'male',2:'female'})),
                           ('age',pd.Series(np.where(d.RIDAGEYR.lt(65),'20–64','65+'))),
@@ -348,7 +470,9 @@ def main(count=100):
     results.append(transport(d,external,full_j))
     all_results=pd.concat(results,ignore_index=True);all_results.to_csv(OUT/'extension_model_comparison.csv',index=False)
     print(all_results[all_results.stage.eq('calibrated')][['analysis','model','n','positives','AUROC','Brier']].to_string(index=False),flush=True)
-    failures=bootstrap(d,full,count) if count else None
+    bootstrap_specs={**PRIMARY,**{k:v for k,v in {**OTHERS,**ENSEMBLE}.items() if k in
+        ['demographics_bmi_cbc_adaboost','demographics_bmi_cbc_ensemble']}}
+    failures=bootstrap(d,full,count,specs=bootstrap_specs) if count else None
     metadata=dict(protocol_sha256=hashlib.sha256((ROOT/'docs/methods/extension_analysis_protocol.md').read_bytes()).hexdigest(),
         bootstrap_requested=count,bootstrap_failures=failures,elapsed_seconds=time.time()-started,
         cycle_counts=counts,primary_specs={k:v[0] for k,v in PRIMARY.items()},drop_basophil_percentage=True,

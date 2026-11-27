@@ -1,0 +1,17 @@
+[
+  {
+    "model": "demographics",
+    "sha256": "6ddb4a318e3b1b9f005a936daa342f506756f97f5798a09ff65f6d1a06381ac6",
+    "threshold": 0.01095686865781634
+  },
+  {
+    "model": "demographics_bmi",
+    "sha256": "f896ed100d507cb49737816424673b4e91a66a9b59898f27f23a6b9b55bfa40e",
+    "threshold": 0.011937433785626858
+  },
+  {
+    "model": "demographics_bmi_cbc",
+    "sha256": "fca2b45d0fe2edd99e691bb7cc06582cae46868211dc23158caed8beafd1d1f2",
+    "threshold": 0.00916311543313028
+  }
+]

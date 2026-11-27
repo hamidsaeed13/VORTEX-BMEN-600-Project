@@ -1,0 +1,4 @@
+comparison,feature_set,n_cbc_features,mean_weighted_AUROC,sd_weighted_AUROC
+hgb_hct_face_validity,knee_8,8,0.8210690317601369,0.06035245285215946
+hgb_hct_face_validity,knee_8_plus_hgb_hct,10,0.8209663037765884,0.06048393245532751
+hgb_hct_face_validity,candidate_13_full,13,0.8076809415144701,0.059057594329626255

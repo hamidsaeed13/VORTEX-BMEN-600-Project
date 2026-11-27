@@ -1,0 +1,25 @@
+{
+  "baseline_features": [
+    "RIDAGEYR",
+    "BMXBMI",
+    "LBXRBCSI",
+    "LBXHGB",
+    "LBXHCT",
+    "LBXMCVSI",
+    "LBXWBCSI",
+    "LBXPLTSI",
+    "LBXLYPCT",
+    "LBXMOPCT",
+    "LBXEOPCT"
+  ],
+  "coverage": {
+    "liver": 4351,
+    "kidney": 4363,
+    "inflammation": 4481,
+    "lipids_nonfasting": 4408,
+    "lipids_fasting": 2434,
+    "insulin": 2450,
+    "homa_ir": 2436
+  },
+  "note": "Exploratory Phase 9 screen. Each group uses its own matched subsample (different n per row) because missingness/fasting-eligibility differs by group -- gains are not directly comparable across groups, only each group to its own baseline. Does not change study_config.py."
+}

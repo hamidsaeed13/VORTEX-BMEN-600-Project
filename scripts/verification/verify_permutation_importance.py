@@ -39,12 +39,12 @@ def main():
                         reference.loc[g.SEQN, 'SDMVPSU'].astype(int).astype(str))
         assert actual_group.eq(group).all()
         assert g.seed.eq(20261116+1000*fold+repeat).all()
-    assert len(repeats) == 2*9*20*4
+    assert len(repeats) == 2*8*20*4  # 2 models x 8 blocks (income dropped, Phase 15) x 20 repeats x 4 metrics
     assert not repeats.duplicated(['model', 'block', 'repeat', 'metric']).any()
     with np.load(OUT/'perturbed_probabilities.npz', allow_pickle=False) as archive:
         ids = archive['SEQN']
         assert len(set(ids)) == 4612 and set(ids) == set(reference.index)
-        assert len(archive.files) == 2*9*20+1
+        assert len(archive.files) == 2*8*20+1
         for (model, block, repeat), rows in repeats.groupby(['model', 'block', 'repeat']):
             g = pred.loc[pred.model.eq(model)].set_index('SEQN').loc[ids]
             y = g.target.to_numpy(); w = g._weight.to_numpy()
@@ -72,8 +72,8 @@ def main():
     protocol = ROOT/'docs/methods/permutation_importance_protocol.md'
     assert status['protocol_sha256'] == hashlib.sha256(protocol.read_bytes()).hexdigest()
     status['independent_checks'] = ['saved baseline predictions and weights', 'within-PSU donor membership and bijections',
-                                    'all 360 probability vectors and 1440 metric differences',
-                                    'all 72 importance summaries', 'protocol hash']
+                                    'all 320 probability vectors and 1280 metric differences',
+                                    'all 64 importance summaries', 'protocol hash']
     status_path.write_text(json.dumps(status, indent=2)+'\n')
     print(json.dumps(status, indent=2))
 

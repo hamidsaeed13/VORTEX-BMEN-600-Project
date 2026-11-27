@@ -8,7 +8,7 @@ Age 20 aligns with availability of adult education information and excludes adol
 
 ## Explicit eligibility
 
-One participant is one case, identified by SEQN. Require RIDSTATR=2, WTPH2YR>0 after repairing tiny XPORT pseudo-zeros, age ≥20, DIQ010=2, no DIQ050=1 or DIQ070=1, observed HbA1c and all 21 CBC predictors. Outcome: HbA1c ≥6.5%, not a confirmed clinical diagnosis. Diagnosis, medication use, HbA1c, pregnancy and survey weights are excluded from model features.
+One participant is one case, identified by SEQN. Require RIDSTATR=2, WTPH2YR>0 after repairing tiny XPORT pseudo-zeros, age ≥20, DIQ010=2, no DIQ050=1 or DIQ070=1, observed HbA1c and all 9 CBC predictors (Phase 15 locked reduced block). Outcome: HbA1c ≥6.5%, not a confirmed clinical diagnosis. Diagnosis, medication use, HbA1c, pregnancy and survey weights are excluded from model features.
 
 DIQ010=1 is known diabetes, 3 is borderline, and 7/9/missing are not treated as a negative response. Borderline responses enter only the labelled sensitivity cohort. Forty-one adults who answered no diagnosis reported insulin or diabetes pills; excluding them removes nine positive HbA1c labels. Missing medication responses are not recoded as confirmed nonuse.
 
@@ -35,15 +35,15 @@ The original reference has 565/717 positives with a reported diagnosis (78.8%). 
 | Model | Pooled OOF AUROC | Average precision | Fold AUROC mean ± SD |
 | --- | --- | --- | --- |
 | age_logistic | 0.630 | 0.034 | 0.634 ± 0.045 |
-| demographics_logistic | 0.718 | 0.049 | 0.723 ± 0.063 |
-| cbc_demographics_logistic | 0.754 | 0.064 | 0.759 ± 0.040 |
-| cbc_demographics_forest | 0.717 | 0.068 | 0.718 ± 0.053 |
+| demographics_logistic | 0.714 | 0.053 | 0.718 ± 0.055 |
+| cbc_demographics_logistic | 0.767 | 0.079 | 0.768 ± 0.031 |
+| cbc_demographics_forest | 0.729 | 0.072 | 0.730 ± 0.059 |
 
-All four models use identical five-fold stratified assignments within a cohort (seed 42), training-fold imputation/scaling, and the team's categorical encoding (sex and race/ethnicity one-hot, education ordinal). Logistic regression uses balanced classes, liblinear, and max_iter=2000; the forest uses 300 trees, balanced classes, min_samples_leaf=5 and seed 42. Logistic inputs use sparse storage to avoid dense BLAS warnings in the execution environment. Age, sex, race/ethnicity, education and income form the demographic baseline; the full model adds the 21 CBC variables listed in `scripts/analysis/study_config.py` (team decision 2026-11-23, superseding the earlier 12-variable block this table previously used).
+All four models use identical five-fold stratified assignments within a cohort (seed 42), training-fold imputation/scaling, and the team's categorical encoding (sex and race/ethnicity one-hot, education ordinal). Logistic regression uses balanced classes, liblinear, and max_iter=2000; the forest uses 300 trees, balanced classes, min_samples_leaf=5 and seed 42. Logistic inputs use sparse storage to avoid dense BLAS warnings in the execution environment. Age, sex, race/ethnicity and education form the demographic baseline (income dropped, Phase 15); the full model adds the 9 CBC variables listed in `scripts/analysis/study_config.py` (Phase 15 Step 3 lock, 2026-11-23, superseding the brief 21-variable stage this table previously used).
 
-CBC adds **0.037 AUROC** over demographics in the matched logistic comparison. This estimates discrimination on these exploratory folds; it does not establish a statistically significant gain or safe test deferral. The no-skill average-precision reference is 0.023. Fold SD describes variation across five overlapping training sets, not a confidence interval. Do not compare these AUROCs directly with notebook 02's single split and ordinal category preprocessing as if only the cohort changed.
+CBC adds **0.053 AUROC** over demographics in the matched logistic comparison. This estimates discrimination on these exploratory folds; it does not establish a statistically significant gain or safe test deferral. The no-skill average-precision reference is 0.023. Fold SD describes variation across five overlapping training sets, not a confidence interval. Do not compare these AUROCs directly with notebook 02's single split and ordinal category preprocessing as if only the cohort changed.
 
-At score threshold 0.2, primary CBC logistic sensitivity is 0.943, NPV 0.996, with 1738 tests deferred and **6 of 106 positive labels missed** across pooled out-of-fold predictions. This is a descriptive fixed-grid example, not a threshold selected or validated for use. Balanced-class scores are uncalibrated; an equal numeric threshold does not mean equal clinical risk. An always-negative rule already has 97.70% NPV here.
+At score threshold 0.2, primary CBC logistic sensitivity is 0.943, NPV 0.996, with 1540 tests deferred and **6 of 106 positive labels missed** across pooled out-of-fold predictions. This is a descriptive fixed-grid example, not a threshold selected or validated for use. Balanced-class scores are uncalibrated; an equal numeric threshold does not mean equal clinical risk. An always-negative rule already has 97.70% NPV here.
 
 ## Figures and reproducibility
 
